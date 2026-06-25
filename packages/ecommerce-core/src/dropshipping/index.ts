@@ -47,24 +47,25 @@ export class ProductResearchService {
 
     // Fallback: mock research
     const minMargin = request.minMargin ?? 30
+    const minP = request.minPrice ?? 15
     return [
       {
         name: `Premium ${request.niche} Kit`, category: request.niche,
-        costPrice: request.minPrice ?? 15, sellingPrice: (request.minPrice ?? 15) * 2.8,
+        costPrice: minP, sellingPrice: Math.round(minP * 2.8 * 100) / 100,
         estimatedMargin: 64, competition: 'medium', demandSignal: 'trending',
         suppliers: ['AliExpress Supplier A', 'CJDropshipping'],
         risk: ['Seasonal demand fluctuation'], goNoGo: minMargin <= 64 ? 'go' : 'no-go',
       },
       {
         name: `Eco ${request.niche} Bundle`, category: request.niche,
-        costPrice: (request.minPrice ?? 15) + 5, sellingPrice: ((request.minPrice ?? 15) + 5) * 3.0,
+        costPrice: Math.round((minP + 5) * 100) / 100, sellingPrice: Math.round((minP + 5) * 3.0 * 100) / 100,
         estimatedMargin: 67, competition: 'low', demandSignal: 'trending',
         suppliers: ['AliExpress Supplier B', 'Spocket'],
         risk: ['Higher shipping cost'], goNoGo: minMargin <= 67 ? 'go' : 'no-go',
       },
       {
         name: `${request.niche} Essential Pack`, category: request.niche,
-        costPrice: (request.minPrice ?? 15) + 2, sellingPrice: ((request.minPrice ?? 15) + 2) * 2.2,
+        costPrice: Math.round((minP + 2) * 100) / 100, sellingPrice: Math.round((minP + 2) * 2.2 * 100) / 100,
         estimatedMargin: 55, competition: 'high', demandSignal: 'stable',
         suppliers: ['AliExpress Supplier C'], risk: ['High competition', 'Price pressure'],
         goNoGo: 'no-go',

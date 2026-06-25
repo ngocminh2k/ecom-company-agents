@@ -106,4 +106,85 @@ const migrations: Array<{ name: string; sql: string }> = [
       CREATE TABLE IF NOT EXISTS sla_events (id TEXT PRIMARY KEY, process_name TEXT NOT NULL, object_id TEXT, sla_hours REAL NOT NULL, breached_at TEXT, severity TEXT CHECK(severity IN ('warning','breach','critical')), status TEXT DEFAULT 'active' CHECK(status IN ('active','acknowledged','resolved')), created_at TEXT DEFAULT (datetime('now')));
     `,
   },
+  {
+    name: '004_shopify_columns',
+    sql: `
+      ALTER TABLE shopify_products ADD COLUMN price REAL;
+      ALTER TABLE shopify_products ADD COLUMN compare_at_price REAL;
+      ALTER TABLE shopify_products ADD COLUMN sku TEXT;
+      ALTER TABLE shopify_products ADD COLUMN inventory_qty INTEGER DEFAULT 0;
+      ALTER TABLE shopify_products ADD COLUMN is_personalized INTEGER DEFAULT 0;
+      ALTER TABLE shopify_products ADD COLUMN personalization_fields TEXT;
+    `,
+  },
+  {
+    name: '005_amazon_columns',
+    sql: `
+      ALTER TABLE amazon_listings ADD COLUMN category TEXT;
+      ALTER TABLE amazon_listings ADD COLUMN variation_theme TEXT;
+      ALTER TABLE amazon_listings ADD COLUMN parent_asin TEXT;
+    `,
+  },
+  {
+    name: '006_amazon_account_health',
+    sql: `
+      CREATE TABLE IF NOT EXISTS amazon_account_health (
+        id TEXT PRIMARY KEY,
+        odr REAL DEFAULT 0,
+        cancellation_rate REAL DEFAULT 0,
+        late_shipment_rate REAL DEFAULT 0,
+        valid_tracking_rate REAL DEFAULT 1,
+        overall_health TEXT DEFAULT 'good' CHECK(overall_health IN ('good','at_risk','critical')),
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS amazon_account_incidents (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL CHECK(type IN ('policy_violation','customer_complaint','intellectual_property','safety_concern','performance')),
+        severity TEXT NOT NULL CHECK(severity IN ('low','medium','high','critical')),
+        description TEXT NOT NULL,
+        category TEXT,
+        reported_at TEXT NOT NULL,
+        status TEXT DEFAULT 'open' CHECK(status IN ('open','investigating','resolved')),
+        resolution TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+    `,
+  },
+  {
+    name: '007_amazon_campaigns',
+    sql: `
+      CREATE TABLE IF NOT EXISTS amazon_campaigns (
+        id TEXT PRIMARY KEY,
+        name TEXT NOT NULL,
+        listing_id TEXT NOT NULL,
+        daily_budget REAL NOT NULL,
+        start_date TEXT NOT NULL,
+        campaign_type TEXT NOT NULL CHECK(campaign_type IN ('sponsored_products','sponsored_brands','sponsored_display')),
+        targeting_type TEXT NOT NULL CHECK(targeting_type IN ('auto','manual','auto_plus_manual')),
+        bid_strategy TEXT NOT NULL CHECK(bid_strategy IN ('dynamic_down_only','dynamic_up_down','fixed')),
+        default_bid REAL NOT NULL,
+        status TEXT DEFAULT 'draft' CHECK(status IN ('draft','running','paused','archived')),
+        keywords TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS amazon_campaign_performance (
+        id TEXT PRIMARY KEY,
+        campaign_id TEXT NOT NULL REFERENCES amazon_campaigns(id),
+        impressions INTEGER DEFAULT 0,
+        clicks INTEGER DEFAULT 0,
+        spend REAL DEFAULT 0,
+        sales REAL DEFAULT 0,
+        orders INTEGER DEFAULT 0,
+        acos REAL DEFAULT 0,
+        tacos REAL DEFAULT 0,
+        ctr REAL DEFAULT 0,
+        conversion_rate REAL DEFAULT 0,
+        roas REAL DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+    `,
+  },
 ]

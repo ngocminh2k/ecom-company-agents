@@ -20,6 +20,9 @@ import { productsRouter } from './routes/products.js'
 import { ordersRouter } from './routes/orders.js'
 import { campaignsRouter } from './routes/campaigns.js'
 import { ecommerceRouter } from './routes/ecommerce.js'
+import { amazonRouter } from './routes/amazon.js'
+import { etsyRouter } from './routes/etsy.js'
+import { shopifyRouter } from './routes/shopify.js'
 
 export interface DaemonContext {
   pool: AgentAdapterPool
@@ -60,6 +63,9 @@ export function createApp(context: DaemonContext): Express {
   app.use('/api/orders', ordersRouter)
   app.use('/api/campaigns', campaignsRouter)
   app.use('/api/ecommerce', ecommerceRouter)
+  app.use('/api/amazon', amazonRouter)
+  app.use('/api/etsy/listings', etsyRouter)
+  app.use('/api/shopify', shopifyRouter)
 
   // Error handler
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
