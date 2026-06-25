@@ -1,10 +1,12 @@
 /**
  * ECC Daemon — Entry point.
  */
+import { readFileSync, existsSync, mkdirSync } from 'node:fs'
+import { join, dirname } from 'node:path'
 import { getConfig, loadConfig } from './config.js'
 import { getDb, closeDb } from './db.js'
 import { createApp, type DaemonContext } from './app.js'
-import { AgentAdapterPool, MockAdapter, ClaudeCodeAdapter, RoutingMatrix, createDefaultRoutingRules } from '@ecc/agent-adapter'
+import { AgentAdapterPool, MockAdapter, ClaudeCodeAdapter, RoutingMatrix, createDefaultRoutingRules, scanAgentPersonalities } from '@ecc/agent-adapter'
 
 async function main() {
   const config = loadConfig()
@@ -43,6 +45,11 @@ async function main() {
   // Initialize agent-to-agent routing matrix
   const routingMatrix = new RoutingMatrix(createDefaultRoutingRules())
   console.log(`[Router] ${routingMatrix.toJSON().length} routing rules loaded`)
+
+  // Load agent personalities
+  const agentsDir = join(process.cwd(), 'agents')
+  const personalities = scanAgentPersonalities(agentsDir)
+  console.log(`[Agents] ${personalities.length} agent personalities loaded (${new Set(personalities.map(p => p.division)).size} divisions)`)
 
   // Create context
   const context: DaemonContext = {
