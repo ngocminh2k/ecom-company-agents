@@ -1,77 +1,65 @@
 import { Router, type Router as RouterType } from 'express'
-import { readdirSync, existsSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { scanSkillsDir, parseSkillFile, SkillExecutor } from '@ecc/skill-system'
 import { getConfig } from '../config.js'
 
 export const skillsRouter: RouterType = Router()
+const skillExecutor = new SkillExecutor()
 
+// List all skills
 skillsRouter.get('/', (_req, res) => {
   const config = getConfig()
-  const skillsDir = config.SKILLS_DIR
-
-  if (!existsSync(skillsDir)) {
-    return res.json({ skills: [] })
-  }
-
-  const skills: Array<{ name: string; path: string; description: string; mode?: string }> = []
-
-  function scanDir(dir: string, basePath: string) {
-    if (!existsSync(dir)) return
-    const entries = readdirSync(dir, { withFileTypes: true })
-    for (const entry of entries) {
-      const fullPath = join(dir, entry.name)
-      if (entry.isDirectory()) {
-        scanDir(fullPath, basePath)
-      } else if (entry.name === 'SKILL.md') {
-        const content = readFileSync(fullPath, 'utf-8')
-        const name = extractFrontmatter(content, 'name') ?? fullPath
-        const description = extractFrontmatter(content, 'description') ?? ''
-        const mode = extractFrontmatter(content, 'mode') ?? extractNestedFrontmatter(content, 'ecc.mode')
-        skills.push({
-          name: name as string,
-          path: fullPath,
-          description: description as string,
-          mode: mode as string | undefined,
-        })
-      }
-    }
-  }
-
-  scanDir(skillsDir, skillsDir)
-  res.json({ skills })
+  const skills = scanSkillsDir(config.SKILLS_DIR)
+  res.json({
+    skills: skills.map((s) => ({
+      id: s.id,
+      name: s.name,
+      path: s.path,
+      description: s.description,
+      mode: s.mode,
+      scenario: s.scenario,
+      triggers: s.triggers,
+      inputs: s.frontmatter.ecc?.inputs ?? [],
+    })),
+  })
 })
 
-function extractFrontmatter(content: string, key: string): string | null {
-  const match = content.match(/^---\n([\s\S]*?)\n---/)
-  if (!match) return null
-  const yaml = match[1]
-  const line = yaml.split('\n').find((l) => l.startsWith(`${key}:`))
-  if (!line) return null
-  return line.split(':').slice(1).join(':').trim().replace(/^["']|["']$/g, '')
-}
-
-function extractNestedFrontmatter(content: string, dotKey: string): string | null {
-  const parts = dotKey.split('.')
-  const match = content.match(/^---\n([\s\S]*?)\n---/)
-  if (!match) return null
-  const yaml = match[1]
-  const lines = yaml.split('\n')
-  let currentLevel = 0
-  let found = false
-  for (const line of lines) {
-    const indent = line.search(/\S/)
-    const trimmed = line.trim()
-    if (indent === 0 && trimmed.includes(':')) {
-      currentLevel = 0
-      found = false
-    }
-    if (trimmed.startsWith(`${parts[0]}:`)) {
-      found = true
-      continue
-    }
-    if (found && trimmed.startsWith(`${parts[1]}:`)) {
-      return trimmed.split(':').slice(1).join(':').trim().replace(/^["']|["']$/g, '')
-    }
+// Get skill by id
+skillsRouter.get('/:id', (req, res) => {
+  const config = getConfig()
+  const skills = scanSkillsDir(config.SKILLS_DIR)
+  const skill = skills.find((s) => s.id === req.params.id)
+  if (!skill) {
+    return res.status(404).json({ error: true, message: 'Skill not found' })
   }
-  return null
-}
+  res.json({ skill })
+})
+
+// Execute a skill (dry-run — returns prepared prompt)
+skillsRouter.post('/:id/execute', async (req: any, res) => {
+  const config = getConfig()
+  const skills = scanSkillsDir(config.SKILLS_DIR)
+  const skill = skills.find((s) => s.id === req.params.id)
+
+  if (!skill) {
+    return res.status(404).json({ error: true, message: 'Skill not found' })
+  }
+
+  const inputs = req.body.inputs ?? {}
+  const errors = skillExecutor.validateInputs(skill, inputs)
+  if (errors.length > 0) {
+    return res.status(400).json({ error: true, message: 'Validation failed', details: errors })
+  }
+
+  const execution = skillExecutor.startExecution(skill, inputs)
+  const prompt = skillExecutor.preparePrompt(skill, inputs)
+
+  res.json({
+    execution: {
+      runId: execution.runId,
+      skillId: execution.skillId,
+      status: execution.status,
+      startedAt: execution.startedAt,
+    },
+    prompt,
+  })
+})

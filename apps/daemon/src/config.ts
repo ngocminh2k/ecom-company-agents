@@ -11,6 +11,7 @@ const envSchema = z.object({
   ARTIFACTS_DIR: z.string().default('./data/artifacts'),
   SKILLS_DIR: z.string().default('./skills'),
   DESIGN_SYSTEMS_DIR: z.string().default('./design-systems'),
+  PLUGINS_DIR: z.string().default('./plugins'),
 
   // LLM Proxy keys (BYOK)
   ANTHROPIC_API_KEY: z.string().optional(),

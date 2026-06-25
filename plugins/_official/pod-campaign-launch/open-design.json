@@ -1,0 +1,38 @@
+{
+  "name": "pod-campaign-launch",
+  "title": "POD Campaign Launch",
+  "version": "1.0.0",
+  "description": "Launch a complete POD campaign from product design to ad creative",
+  "author": "ECC OmniStudio",
+  "tags": ["pod", "campaign", "marketing"],
+  "pipeline": {
+    "stages": [
+      {
+        "id": "discovery",
+        "atoms": ["discovery-form"]
+      },
+      {
+        "id": "design-product",
+        "atoms": ["file-write", "media-image"]
+      },
+      {
+        "id": "create-ad",
+        "atoms": ["file-write"]
+      },
+      {
+        "id": "critique",
+        "atoms": ["critique-theater"],
+        "repeat": true,
+        "until": "score >= 4"
+      }
+    ]
+  },
+  "od": {
+    "kind": "bundle",
+    "mode": "landing-page",
+    "taskKind": "new-generation",
+    "useCase": {
+      "query": "Launch a POD campaign for {{product_name}}"
+    }
+  }
+}
