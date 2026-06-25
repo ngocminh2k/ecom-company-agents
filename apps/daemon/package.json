@@ -17,6 +17,7 @@
     "@ecc/agent-adapter": "workspace:*",
     "@ecc/skill-system": "workspace:*",
     "@ecc/plugin-system": "workspace:*",
+    "@ecc/design-system": "workspace:*",
     "express": "^5.0.0",
     "cors": "^2.8.5",
     "better-sqlite3": "^11.0.0",

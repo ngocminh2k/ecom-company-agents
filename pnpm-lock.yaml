@@ -13,6 +13,9 @@ importers:
       '@ecc/agent-adapter':
         specifier: workspace:*
         version: link:../../packages/agent-adapter
+      '@ecc/design-system':
+        specifier: workspace:*
+        version: link:../../packages/design-system
       '@ecc/plugin-system':
         specifier: workspace:*
         version: link:../../packages/plugin-system
@@ -97,6 +100,18 @@ importers:
       typescript:
         specifier: ^5.7.0
         version: 5.9.3
+
+  packages/design-system:
+    devDependencies:
+      '@types/node':
+        specifier: ^22.0.0
+        version: 22.20.0
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+      vitest:
+        specifier: ^3.0.0
+        version: 3.2.6(@types/node@22.20.0)(tsx@4.22.4)
 
   packages/mcp-server:
     dependencies:

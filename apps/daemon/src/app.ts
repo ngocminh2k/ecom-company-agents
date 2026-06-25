@@ -14,6 +14,7 @@ import { healthRouter } from './routes/health.js'
 import { agentsRouter } from './routes/agents.js'
 import { skillsRouter } from './routes/skills.js'
 import { pluginsRouter } from './routes/plugins.js'
+import { designSystemsRouter } from './routes/design-systems.js'
 import { artifactsRouter } from './routes/artifacts.js'
 import { productsRouter } from './routes/products.js'
 import { ordersRouter } from './routes/orders.js'
@@ -52,6 +53,7 @@ export function createApp(context: DaemonContext): Express {
   app.use('/api/agents', agentsRouter)
   app.use('/api/skills', skillsRouter)
   app.use('/api/plugins', pluginsRouter)
+  app.use('/api/design-systems', designSystemsRouter)
   app.use('/api/artifacts', artifactsRouter)
   app.use('/api/products', productsRouter)
   app.use('/api/orders', ordersRouter)
