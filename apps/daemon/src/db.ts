@@ -73,7 +73,7 @@ const migrations: Array<{ name: string; sql: string }> = [
   {
     name: '002_ecommerce',
     sql: `
-      CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL CHECK(type IN ('pod','dropshipping','digital')), status TEXT DEFAULT 'draft' CHECK(status IN ('idea','researching','in_design','ready_for_launch','active','archived','discontinued')), description TEXT, sku TEXT, price REAL, cost REAL, shipping_cost REAL, supplier_id TEXT, supplier_name TEXT, category TEXT, tags TEXT, weight REAL, is_personalized INTEGER DEFAULT 0, processing_time_days INTEGER DEFAULT 3, metadata TEXT, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
+      CREATE TABLE IF NOT EXISTS products (id TEXT PRIMARY KEY, name TEXT NOT NULL, type TEXT NOT NULL CHECK(type IN ('pod','dropshipping','digital')), status TEXT DEFAULT 'idea' CHECK(status IN ('draft','idea','researching','in_design','ready_for_launch','active','archived','discontinued')), description TEXT, sku TEXT, price REAL, cost REAL, shipping_cost REAL, supplier_id TEXT, supplier_name TEXT, category TEXT, tags TEXT, weight REAL, is_personalized INTEGER DEFAULT 0, processing_time_days INTEGER DEFAULT 3, metadata TEXT, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
       CREATE TABLE IF NOT EXISTS orders (id TEXT PRIMARY KEY, product_id TEXT, product_name TEXT, sku TEXT, quantity INTEGER DEFAULT 1, unit_price REAL, total REAL, status TEXT DEFAULT 'pending' CHECK(status IN ('pending','processing','shipped','delivered','cancelled','returned','refunded')), customer_email TEXT, customer_name TEXT, shipping_address TEXT, tracking_number TEXT, carrier TEXT, is_personalized INTEGER DEFAULT 0, personalization_data TEXT, personalization_preview_url TEXT, production_file_url TEXT, production_vendor TEXT, notes TEXT, refund_amount REAL, refund_reason TEXT, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
       CREATE TABLE IF NOT EXISTS campaigns (id TEXT PRIMARY KEY, name TEXT NOT NULL, platform TEXT NOT NULL, status TEXT DEFAULT 'draft' CHECK(status IN ('draft','active','paused','completed','archived')), budget REAL, product_ids TEXT, ad_creative_path TEXT, metrics TEXT, launch_date TEXT, objective TEXT, target_audience TEXT, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
       CREATE TABLE IF NOT EXISTS suppliers (id TEXT PRIMARY KEY, name TEXT NOT NULL, platform TEXT NOT NULL CHECK(platform IN ('printful','printify','aliexpress','custom')), api_key TEXT, api_url TEXT, enabled INTEGER DEFAULT 1, created_at TEXT DEFAULT (datetime('now')));
@@ -291,8 +291,6 @@ const migrations: Array<{ name: string; sql: string }> = [
   {
     name: '011_product_research_ip',
     sql: `
-      ALTER TABLE product_research_sheets ADD COLUMN status TEXT DEFAULT 'draft' CHECK(status IN ('draft','in_review','approved','rejected'));
-
       CREATE TABLE IF NOT EXISTS competitor_entries (
         id TEXT PRIMARY KEY,
         product_id TEXT NOT NULL,
