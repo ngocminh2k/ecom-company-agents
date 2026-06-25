@@ -1,5 +1,5 @@
 {
-  "name": "@ecc/contracts",
+  "name": "@ngocminh2k/contracts",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",

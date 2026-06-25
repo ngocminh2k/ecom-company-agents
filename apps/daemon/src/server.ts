@@ -6,7 +6,7 @@ import { join, dirname } from 'node:path'
 import { getConfig, loadConfig } from './config.js'
 import { getDb, closeDb } from './db.js'
 import { createApp, type DaemonContext } from './app.js'
-import { AgentAdapterPool, MockAdapter, ClaudeCodeAdapter, RoutingMatrix, createDefaultRoutingRules, scanAgentPersonalities } from '@ecc/agent-adapter'
+import { AgentAdapterPool, MockAdapter, ClaudeCodeAdapter, RoutingMatrix, createDefaultRoutingRules, scanAgentPersonalities } from '@ngocminh2k/agent-adapter'
 
 async function main() {
   const config = loadConfig()

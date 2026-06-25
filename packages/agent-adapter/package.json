@@ -1,5 +1,5 @@
 {
-  "name": "@ecc/agent-adapter",
+  "name": "@ngocminh2k/agent-adapter",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",

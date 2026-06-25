@@ -1,5 +1,5 @@
 {
-  "name": "@ecc/ecommerce-core",
+  "name": "@ngocminh2k/ecommerce-core",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
@@ -11,7 +11,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@ecc/contracts": "workspace:*",
+    "@ngocminh2k/contracts": "workspace:*",
     "zod": "^4.0.0"
   },
   "devDependencies": {

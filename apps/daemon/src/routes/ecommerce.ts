@@ -1,8 +1,8 @@
 import { Router, type Router as RouterType } from 'express'
-import { PodProductDesigner, PrintProvider } from '@ecc/ecommerce-core'
-import { ProductResearchService, SupplierImportService, OrderProcessorService } from '@ecc/ecommerce-core'
-import { CampaignCreatorService, AdCreativeGenService } from '@ecc/ecommerce-core'
-import { AnalyticsService } from '@ecc/ecommerce-core'
+import { PodProductDesigner, PrintProvider } from '@ngocminh2k/ecommerce-core'
+import { ProductResearchService, SupplierImportService, OrderProcessorService } from '@ngocminh2k/ecommerce-core'
+import { CampaignCreatorService, AdCreativeGenService } from '@ngocminh2k/ecommerce-core'
+import { AnalyticsService } from '@ngocminh2k/ecommerce-core'
 
 export const ecommerceRouter: RouterType = Router()
 

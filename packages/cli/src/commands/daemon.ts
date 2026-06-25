@@ -13,6 +13,6 @@ export async function startDaemon(args: string[]) {
     child.on('exit', (code) => process.exit(code ?? 0))
   } else {
     console.log('[CLI] Starting daemon...')
-    console.log('Use: pnpm --filter @ecc/daemon dev for dev mode')
+    console.log('Use: pnpm --filter @ngocminh2k/daemon dev for dev mode')
   }
 }

@@ -10,19 +10,19 @@ importers:
 
   apps/daemon:
     dependencies:
-      '@ecc/agent-adapter':
+      '@ngocminh2k/agent-adapter':
         specifier: workspace:*
         version: link:../../packages/agent-adapter
-      '@ecc/design-system':
+      '@ngocminh2k/design-system':
         specifier: workspace:*
         version: link:../../packages/design-system
-      '@ecc/ecommerce-core':
+      '@ngocminh2k/ecommerce-core':
         specifier: workspace:*
         version: link:../../packages/ecommerce-core
-      '@ecc/plugin-system':
+      '@ngocminh2k/plugin-system':
         specifier: workspace:*
         version: link:../../packages/plugin-system
-      '@ecc/skill-system':
+      '@ngocminh2k/skill-system':
         specifier: workspace:*
         version: link:../../packages/skill-system
       better-sqlite3:
@@ -118,7 +118,7 @@ importers:
 
   packages/cli:
     dependencies:
-      '@ecc/daemon':
+      '@ngocminh2k/daemon':
         specifier: workspace:*
         version: link:../../apps/daemon
       zod:
@@ -152,7 +152,7 @@ importers:
 
   packages/ecommerce-core:
     dependencies:
-      '@ecc/contracts':
+      '@ngocminh2k/contracts':
         specifier: workspace:*
         version: link:../contracts
       zod:

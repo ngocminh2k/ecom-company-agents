@@ -1,5 +1,5 @@
 import { Router, type Router as RouterType } from 'express'
-import { PluginInstaller, PipelineExecutor } from '@ecc/plugin-system'
+import { PluginInstaller, PipelineExecutor } from '@ngocminh2k/plugin-system'
 import { getConfig } from '../config.js'
 
 export const pluginsRouter: RouterType = Router()

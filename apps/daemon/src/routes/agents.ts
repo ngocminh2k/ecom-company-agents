@@ -1,6 +1,6 @@
 import { Router, type Router as RouterType } from 'express'
 import type { DaemonContext } from '../app.js'
-import { scanAgentPersonalities } from '@ecc/agent-adapter'
+import { scanAgentPersonalities } from '@ngocminh2k/agent-adapter'
 import { join } from 'node:path'
 
 export const agentsRouter: RouterType = Router()

@@ -8,17 +8,17 @@ export async function mcpCommand(args: string[]) {
     const configs: Record<string, object> = {
       'claude-code': {
         command: 'npx',
-        args: ['-y', '@ecc/mcp-server'],
+        args: ['-y', '@ngocminh2k/mcp-server'],
         description: 'ECC OmniStudio MCP server — agent harness for e-commerce',
       },
       'codex': {
         command: 'npx',
-        args: ['-y', '@ecc/mcp-server'],
+        args: ['-y', '@ngocminh2k/mcp-server'],
         description: 'ECC OmniStudio MCP server',
       },
       'cursor': {
         command: 'npx',
-        args: ['-y', '@ecc/mcp-server'],
+        args: ['-y', '@ngocminh2k/mcp-server'],
         description: 'ECC OmniStudio MCP server',
       },
     }

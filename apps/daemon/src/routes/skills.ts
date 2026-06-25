@@ -1,5 +1,5 @@
 import { Router, type Router as RouterType } from 'express'
-import { scanSkillsDir, parseSkillFile, SkillExecutor } from '@ecc/skill-system'
+import { scanSkillsDir, parseSkillFile, SkillExecutor } from '@ngocminh2k/skill-system'
 import { getConfig } from '../config.js'
 
 export const skillsRouter: RouterType = Router()

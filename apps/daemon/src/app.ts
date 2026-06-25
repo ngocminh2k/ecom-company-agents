@@ -5,9 +5,9 @@
 import express, { type Express } from 'express'
 import cors from 'cors'
 import { getConfig } from './config.js'
-import { AgentAdapterPool } from '@ecc/agent-adapter'
-import { MockAdapter, ClaudeCodeAdapter } from '@ecc/agent-adapter'
-import { RoutingMatrix, createDefaultRoutingRules } from '@ecc/agent-adapter'
+import { AgentAdapterPool } from '@ngocminh2k/agent-adapter'
+import { MockAdapter, ClaudeCodeAdapter } from '@ngocminh2k/agent-adapter'
+import { RoutingMatrix, createDefaultRoutingRules } from '@ngocminh2k/agent-adapter'
 
 // Route imports
 import { healthRouter } from './routes/health.js'

@@ -1,5 +1,5 @@
 {
-  "name": "@ecc/plugin-system",
+  "name": "@ngocminh2k/plugin-system",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",

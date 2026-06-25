@@ -1,5 +1,5 @@
 {
-  "name": "@ecc/mcp-server",
+  "name": "@ngocminh2k/mcp-server",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",

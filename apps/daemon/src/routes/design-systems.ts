@@ -1,5 +1,5 @@
 import { Router, type Router as RouterType } from 'express'
-import { scanDesignSystemsDir, parseDesignSystemFile, generateTokensCss } from '@ecc/design-system'
+import { scanDesignSystemsDir, parseDesignSystemFile, generateTokensCss } from '@ngocminh2k/design-system'
 import { getConfig } from '../config.js'
 
 export const designSystemsRouter: RouterType = Router()

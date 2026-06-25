@@ -1,5 +1,5 @@
 {
-  "name": "@ecc/daemon",
+  "name": "@ngocminh2k/daemon",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/server.js",
@@ -14,11 +14,11 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@ecc/agent-adapter": "workspace:*",
-    "@ecc/skill-system": "workspace:*",
-    "@ecc/plugin-system": "workspace:*",
-    "@ecc/design-system": "workspace:*",
-    "@ecc/ecommerce-core": "workspace:*",
+    "@ngocminh2k/agent-adapter": "workspace:*",
+    "@ngocminh2k/skill-system": "workspace:*",
+    "@ngocminh2k/plugin-system": "workspace:*",
+    "@ngocminh2k/design-system": "workspace:*",
+    "@ngocminh2k/ecommerce-core": "workspace:*",
     "express": "^5.0.0",
     "cors": "^2.8.5",
     "better-sqlite3": "^11.0.0",

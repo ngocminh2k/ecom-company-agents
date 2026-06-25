@@ -1,5 +1,5 @@
 {
-  "name": "@ecc/design-system",
+  "name": "@ngocminh2k/design-system",
   "version": "0.1.0",
   "type": "module",
   "main": "dist/index.js",
