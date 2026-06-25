@@ -1,8 +1,8 @@
-import { Router } from 'express'
+import { Router, type Router as RouterType } from 'express'
 import { getDb } from '../db.js'
 import { randomUUID } from 'node:crypto'
 
-export const ordersRouter = Router()
+export const ordersRouter: RouterType = Router()
 
 ordersRouter.get('/', (_req, res) => {
   const db = getDb()

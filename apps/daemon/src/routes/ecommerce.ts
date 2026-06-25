@@ -1,6 +1,6 @@
-import { Router } from 'express'
+import { Router, type Router as RouterType } from 'express'
 
-export const ecommerceRouter = Router()
+export const ecommerceRouter: RouterType = Router()
 
 ecommerceRouter.get('/summary', (req: any, res) => {
   const db = req.daemonContext?.pool ? undefined : null

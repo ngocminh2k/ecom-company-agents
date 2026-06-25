@@ -1,7 +1,7 @@
-import { Router } from 'express'
+import { Router, type Router as RouterType } from 'express'
 import type { DaemonContext } from '../app.js'
 
-export const agentsRouter = Router()
+export const agentsRouter: RouterType = Router()
 
 // List all available agents
 agentsRouter.get('/', async (req: any, res) => {

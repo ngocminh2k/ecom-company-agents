@@ -1,6 +1,6 @@
-import { Router } from 'express'
+import { Router, type Router as RouterType } from 'express'
 
-export const artifactsRouter = Router()
+export const artifactsRouter: RouterType = Router()
 
 artifactsRouter.get('/', (_req, res) => {
   res.json({

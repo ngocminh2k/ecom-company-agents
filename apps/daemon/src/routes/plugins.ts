@@ -1,6 +1,6 @@
-import { Router } from 'express'
+import { Router, type Router as RouterType } from 'express'
 
-export const pluginsRouter = Router()
+export const pluginsRouter: RouterType = Router()
 
 pluginsRouter.get('/', (_req, res) => {
   res.json({

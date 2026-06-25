@@ -14,3 +14,6 @@ logs/
 Thumbs.db
 coverage/
 .claude/
+*.db
+*.db-shm
+*.db-wal

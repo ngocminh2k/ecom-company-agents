@@ -2,7 +2,7 @@
  * ECC Daemon — Express app factory.
  * Wires middleware, routes, and starts the daemon.
  */
-import express from 'express'
+import express, { type Express } from 'express'
 import cors from 'cors'
 import { getConfig } from './config.js'
 import { AgentAdapterPool } from '@ecc/agent-adapter'
@@ -26,7 +26,7 @@ export interface DaemonContext {
   config: ReturnType<typeof getConfig>
 }
 
-export function createApp(context: DaemonContext) {
+export function createApp(context: DaemonContext): Express {
   const app = express()
   const config = context.config
 

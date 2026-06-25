@@ -6,7 +6,7 @@ export async function skillCommand(args: string[]) {
       console.log('[SKILL] Scanning for installed skills...')
       try {
         const res = await fetch('http://localhost:7456/api/skills')
-        const data = await res.json()
+        const data: any = await res.json()
         if (data.skills?.length > 0) {
           console.log(`\nFound ${data.skills.length} skills:\n`)
           for (const skill of data.skills) {

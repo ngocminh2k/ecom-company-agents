@@ -1,9 +1,9 @@
-import { Router } from 'express'
+import { Router, type Router as RouterType } from 'express'
 import { readdirSync, existsSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { getConfig } from '../config.js'
 
-export const skillsRouter = Router()
+export const skillsRouter: RouterType = Router()
 
 skillsRouter.get('/', (_req, res) => {
   const config = getConfig()
