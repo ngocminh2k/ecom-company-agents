@@ -313,4 +313,31 @@ const migrations: Array<{ name: string; sql: string }> = [
       );
     `,
   },
+  {
+    name: '012_phases_9_10',
+    sql: `
+      -- Phase 9: Product Launch Orchestration
+      CREATE TABLE IF NOT EXISTS launch_orchestrations (
+        id TEXT PRIMARY KEY,
+        product_id TEXT NOT NULL,
+        stage TEXT NOT NULL DEFAULT 'research' CHECK(stage IN ('research','creative','launch','data','scale')),
+        status TEXT NOT NULL DEFAULT 'not_started' CHECK(status IN ('not_started','in_progress','completed','blocked')),
+        etsy_launched INTEGER DEFAULT 0,
+        shopify_launched INTEGER DEFAULT 0,
+        amazon_ready INTEGER DEFAULT 0,
+        ad_campaign_active INTEGER DEFAULT 0,
+        social_content_posted INTEGER DEFAULT 0,
+        fulfillment_ready INTEGER DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+      -- Add product_id index for fast lookups
+      CREATE INDEX IF NOT EXISTS idx_launch_orch_product ON launch_orchestrations(product_id);
+
+      -- Phase 10: Dashboard + BI tables already exist in 003_sop_forms:
+      -- listing_logs, channel_launch_logs, order_issue_logs, ad_test_logs, creative_briefs,
+      -- incident_logs, ip_check_logs, sla_events, product_lifecycle, launch_checklist
+      -- All were created in migration 003; no new tables needed.
+    `,
+  },
 ]

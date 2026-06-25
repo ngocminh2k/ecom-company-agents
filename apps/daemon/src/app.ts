@@ -27,6 +27,8 @@ import { fulfillmentRouter, qcRouter, vendorsRouter } from './routes/fulfillment
 import { supportRouter } from './routes/support.js'
 import { financeRouter } from './routes/finance.js'
 import { productResearchRouter } from './routes/product-research.js'
+import { orchestrationRouter } from './routes/orchestration.js'
+import { biRouter } from './routes/bi.js'
 
 export interface DaemonContext {
   pool: AgentAdapterPool
@@ -76,6 +78,8 @@ export function createApp(context: DaemonContext): Express {
   app.use('/api/support', supportRouter)
   app.use('/api/finance', financeRouter)
   app.use('/api/product-research', productResearchRouter)
+  app.use('/api/orchestration', orchestrationRouter)
+  app.use('/api/bi', biRouter)
 
   // Error handler
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
