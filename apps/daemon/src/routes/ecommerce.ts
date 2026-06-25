@@ -1,23 +1,44 @@
 import { Router, type Router as RouterType } from 'express'
-import { PodProductDesigner, PrintProvider } from '@ngocminh2k/ecommerce-core'
-import { ProductResearchService, SupplierImportService, OrderProcessorService } from '@ngocminh2k/ecommerce-core'
-import { CampaignCreatorService, AdCreativeGenService } from '@ngocminh2k/ecommerce-core'
-import { AnalyticsService } from '@ngocminh2k/ecommerce-core'
+import type { DaemonContext } from '../app.js'
+import type { TaskRunner } from '@ngocminh2k/ecommerce-core'
+import {
+  PodProductDesigner, PrintProvider,
+  ProductResearchService, SupplierImportService, OrderProcessorService,
+  CampaignCreatorService, AdCreativeGenService,
+  AnalyticsService,
+} from '@ngocminh2k/ecommerce-core'
 
 export const ecommerceRouter: RouterType = Router()
 
-// Services
-const podDesigner = new PodProductDesigner()
-const printProvider = new PrintProvider()
-const productResearch = new ProductResearchService()
-const supplierImport = new SupplierImportService()
-const orderProcessor = new OrderProcessorService()
-const campaignCreator = new CampaignCreatorService()
-const adCreative = new AdCreativeGenService()
-const analytics = new AnalyticsService()
+/**
+ * Factory to create e-commerce services with injected TaskRunner.
+ * Each request gets fresh service instances wired to the AgentRouterService.
+ */
+function createServices(ctx: DaemonContext) {
+  const runner: TaskRunner = {
+    routeTask: (taskType, taskInput, options) =>
+      ctx.agentRouter.routeTask(taskType, taskInput, {
+        outputSchema: options?.outputSchema,
+        timeoutMs: options?.timeoutMs,
+      }),
+  }
+
+  return {
+    podDesigner: new PodProductDesigner(runner),
+    printProvider: new PrintProvider(runner),
+    productResearch: new ProductResearchService(runner),
+    supplierImport: new SupplierImportService(runner),
+    orderProcessor: new OrderProcessorService(runner),
+    campaignCreator: new CampaignCreatorService(runner),
+    adCreative: new AdCreativeGenService(runner),
+    analytics: new AnalyticsService(runner),
+  }
+}
 
 // ─── Dashboard ─────────────────────────────────────────────────────
-ecommerceRouter.get('/summary', async (_req, res) => {
+ecommerceRouter.get('/summary', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { analytics } = createServices(ctx)
   const report = await analytics.generateReport('monthly')
   res.json({
     summary: {
@@ -35,6 +56,8 @@ ecommerceRouter.get('/summary', async (_req, res) => {
 
 // ─── POD ────────────────────────────────────────────────────────────
 ecommerceRouter.post('/pod/design', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { podDesigner } = createServices(ctx)
   const { productType, designBrief, brand, colors, placement } = req.body
   if (!productType || !designBrief) {
     return res.status(400).json({ error: true, message: 'productType and designBrief required' })
@@ -43,12 +66,16 @@ ecommerceRouter.post('/pod/design', async (req: any, res) => {
   res.json({ mockup: result })
 })
 
-ecommerceRouter.get('/pod/catalog', async (_req, res) => {
+ecommerceRouter.get('/pod/catalog', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { printProvider } = createServices(ctx)
   const catalog = await printProvider.getProductCatalog('printful')
   res.json({ products: catalog })
 })
 
 ecommerceRouter.post('/pod/design/svg', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { podDesigner } = createServices(ctx)
   const { productType, designBrief } = req.body
   const svg = await podDesigner.generateSvgDesign(productType ?? 'tshirt', designBrief ?? 'Design')
   res.type('image/svg+xml').send(svg)
@@ -56,6 +83,8 @@ ecommerceRouter.post('/pod/design/svg', async (req: any, res) => {
 
 // ─── Dropshipping ──────────────────────────────────────────────────
 ecommerceRouter.post('/dropshipping/research', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { productResearch } = createServices(ctx)
   const { niche, minPrice, maxPrice } = req.body
   if (!niche) {
     return res.status(400).json({ error: true, message: 'niche is required' })
@@ -65,6 +94,8 @@ ecommerceRouter.post('/dropshipping/research', async (req: any, res) => {
 })
 
 ecommerceRouter.post('/dropshipping/suppliers/search', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { supplierImport } = createServices(ctx)
   const { query } = req.body
   if (!query) return res.status(400).json({ error: true, message: 'query is required' })
   const suppliers = await supplierImport.searchSuppliers(query)
@@ -72,6 +103,8 @@ ecommerceRouter.post('/dropshipping/suppliers/search', async (req: any, res) => 
 })
 
 ecommerceRouter.post('/dropshipping/orders', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { orderProcessor } = createServices(ctx)
   const { productId, quantity, shippingAddress, customerEmail } = req.body
   if (!productId || !shippingAddress) {
     return res.status(400).json({ error: true, message: 'productId and shippingAddress required' })
@@ -82,6 +115,8 @@ ecommerceRouter.post('/dropshipping/orders', async (req: any, res) => {
 
 // ─── Marketing ─────────────────────────────────────────────────────
 ecommerceRouter.post('/marketing/campaigns/plan', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { campaignCreator } = createServices(ctx)
   const { name, platform, productIds, budget, objective, targetAudience } = req.body
   if (!name || !platform || !budget) {
     return res.status(400).json({ error: true, message: 'name, platform, and budget required' })
@@ -91,6 +126,8 @@ ecommerceRouter.post('/marketing/campaigns/plan', async (req: any, res) => {
 })
 
 ecommerceRouter.post('/marketing/creatives/generate', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { adCreative } = createServices(ctx)
   const { platform, productName, description } = req.body
   if (!platform || !productName) {
     return res.status(400).json({ error: true, message: 'platform and productName required' })
@@ -101,12 +138,16 @@ ecommerceRouter.post('/marketing/creatives/generate', async (req: any, res) => {
 
 // ─── Analytics ─────────────────────────────────────────────────────
 ecommerceRouter.get('/analytics/report', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { analytics } = createServices(ctx)
   const period = (req.query.period as string) ?? 'monthly'
   const report = await analytics.generateReport(period)
   res.json({ report })
 })
 
 ecommerceRouter.get('/analytics/top-products', async (req: any, res) => {
+  const ctx: DaemonContext = req.daemonContext
+  const { analytics } = createServices(ctx)
   const report = await analytics.generateReport('monthly')
   res.json({ products: report.topProducts })
 })

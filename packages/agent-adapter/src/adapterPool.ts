@@ -52,7 +52,8 @@ export class AgentAdapterPool {
    * Uses the routing matrix for agent-to-agent delegation.
    */
   async resolveForTask(taskType: string, preferredAgentId?: string): Promise<AgentAdapter | null> {
-    if (preferredAgentId) {
+    // 'any' means try all adapters, don't look up by specific ID
+    if (preferredAgentId && preferredAgentId !== 'any') {
       const adapter = this.adapters.get(preferredAgentId)
       if (adapter) {
         const detection = await adapter.detect()
@@ -60,13 +61,21 @@ export class AgentAdapterPool {
       }
     }
 
-    // Fallback: try each adapter in registration order
+    // Fallback: try each adapter in registration order, prefer non-mock
+    let mockAdapter: AgentAdapter | null = null
     for (const [, adapter] of this.adapters) {
       const detection = await adapter.detect()
-      if (detection) return adapter
+      if (detection) {
+        if (adapter.id === 'mock') {
+          mockAdapter = adapter // Save as last resort
+        } else {
+          return adapter // Return real adapter first
+        }
+      }
     }
 
-    return null
+    // Only return mock if nothing else found
+    return mockAdapter
   }
 
   /** Track a running agent session */

@@ -6,7 +6,7 @@ import { join, dirname } from 'node:path'
 import { getConfig, loadConfig } from './config.js'
 import { getDb, closeDb } from './db.js'
 import { createApp, type DaemonContext } from './app.js'
-import { AgentAdapterPool, MockAdapter, ClaudeCodeAdapter, RoutingMatrix, createDefaultRoutingRules, scanAgentPersonalities } from '@ngocminh2k/agent-adapter'
+import { AgentAdapterPool, MockAdapter, ClaudeCodeAdapter, RoutingMatrix, createDefaultRoutingRules, scanAgentPersonalities, AgentRouterService } from '@ngocminh2k/agent-adapter'
 
 async function main() {
   const config = loadConfig()
@@ -51,10 +51,21 @@ async function main() {
   const personalities = scanAgentPersonalities(agentsDir)
   console.log(`[Agents] ${personalities.length} agent personalities loaded (${new Set(personalities.map(p => p.division)).size} divisions)`)
 
+  // Initialize Agent Router Service (bridges skills ↔ routing matrix ↔ adapter pool)
+  const agentRouter = new AgentRouterService(pool, routingMatrix, {
+    cwd: process.cwd(),
+    defaultTimeoutMs: 300_000,
+    skillDirectories: [config.SKILLS_DIR],
+    designSystemDirectories: [config.DESIGN_SYSTEMS_DIR],
+    allowMockFallback: !claudeDetected,
+  })
+  console.log(`[Router] Agent router service initialized (mock fallback: ${!claudeDetected})`)
+
   // Create context
   const context: DaemonContext = {
     pool,
     routingMatrix,
+    agentRouter,
     config,
   }
 

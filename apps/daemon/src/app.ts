@@ -5,7 +5,7 @@
 import express, { type Express } from 'express'
 import cors from 'cors'
 import { getConfig } from './config.js'
-import { AgentAdapterPool } from '@ngocminh2k/agent-adapter'
+import { AgentAdapterPool, AgentRouterService } from '@ngocminh2k/agent-adapter'
 import { MockAdapter, ClaudeCodeAdapter } from '@ngocminh2k/agent-adapter'
 import { RoutingMatrix, createDefaultRoutingRules } from '@ngocminh2k/agent-adapter'
 
@@ -24,6 +24,7 @@ import { ecommerceRouter } from './routes/ecommerce.js'
 export interface DaemonContext {
   pool: AgentAdapterPool
   routingMatrix: RoutingMatrix
+  agentRouter: AgentRouterService
   config: ReturnType<typeof getConfig>
 }
 

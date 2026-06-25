@@ -42,6 +42,8 @@ export interface AgentRunParams {
   timeoutMs?: number
   /** Additional environment variables to pass */
   env?: Record<string, string>
+  /** JSON Schema to enforce structured output from the agent */
+  outputSchema?: Record<string, unknown>
 }
 
 // ─── Streaming Events ──────────────────────────────────────────────

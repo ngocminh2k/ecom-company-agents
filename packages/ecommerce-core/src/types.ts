@@ -2,6 +2,27 @@
  * E-Commerce Core — shared types for domain services.
  */
 
+/**
+ * Interface for agent-based task execution.
+ * Injected by the daemon — keeps ecommerce-core decoupled from agent-adapter.
+ * When provided, services use real AI agents instead of mock data.
+ */
+export interface TaskRunner {
+  routeTask(
+    taskType: string,
+    taskInput: Record<string, unknown>,
+    options?: {
+      outputSchema?: Record<string, unknown>
+      timeoutMs?: number
+    }
+  ): Promise<{
+    output: string
+    error?: string
+    agentId: string
+    durationMs: number
+  }>
+}
+
 export interface PodProductRequest {
   productType: 'tshirt' | 'mug' | 'hoodie' | 'poster' | 'tote-bag' | 'phone-case'
   designBrief: string
