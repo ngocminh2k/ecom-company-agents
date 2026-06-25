@@ -23,6 +23,10 @@ import { ecommerceRouter } from './routes/ecommerce.js'
 import { amazonRouter } from './routes/amazon.js'
 import { etsyRouter } from './routes/etsy.js'
 import { shopifyRouter } from './routes/shopify.js'
+import { fulfillmentRouter, qcRouter, vendorsRouter } from './routes/fulfillment.js'
+import { supportRouter } from './routes/support.js'
+import { financeRouter } from './routes/finance.js'
+import { productResearchRouter } from './routes/product-research.js'
 
 export interface DaemonContext {
   pool: AgentAdapterPool
@@ -66,6 +70,12 @@ export function createApp(context: DaemonContext): Express {
   app.use('/api/amazon', amazonRouter)
   app.use('/api/etsy/listings', etsyRouter)
   app.use('/api/shopify', shopifyRouter)
+  app.use('/api/fulfillment', fulfillmentRouter)
+  app.use('/api/quality-check', qcRouter)
+  app.use('/api/vendors', vendorsRouter)
+  app.use('/api/support', supportRouter)
+  app.use('/api/finance', financeRouter)
+  app.use('/api/product-research', productResearchRouter)
 
   // Error handler
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

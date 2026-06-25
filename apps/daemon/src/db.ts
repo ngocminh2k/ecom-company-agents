@@ -83,7 +83,7 @@ const migrations: Array<{ name: string; sql: string }> = [
   {
     name: '003_sop_forms',
     sql: `
-      CREATE TABLE IF NOT EXISTS product_research_sheets (id TEXT PRIMARY KEY, product_name TEXT NOT NULL, niche TEXT, target_customer TEXT, occasion TEXT, first_test_channel TEXT, main_competitors TEXT, keywords TEXT, price_proposed REAL, cogs_estimated REAL, shipping_estimated REAL, platform_fees_estimated REAL, cpa_target REAL, margin_target REAL, ip_risks TEXT, fulfillment_risks TEXT, content_angles TEXT, score INTEGER, conclusion TEXT, proposer TEXT, approver TEXT, created_at TEXT DEFAULT (datetime('now')));
+      CREATE TABLE IF NOT EXISTS product_research_sheets (id TEXT PRIMARY KEY, product_name TEXT NOT NULL, niche TEXT, target_customer TEXT, occasion TEXT, first_test_channel TEXT, main_competitors TEXT, keywords TEXT, price_proposed REAL, cogs_estimated REAL, shipping_estimated REAL, platform_fees_estimated REAL, cpa_target REAL, margin_target REAL, ip_risks TEXT, fulfillment_risks TEXT, content_angles TEXT, score INTEGER, conclusion TEXT, proposer TEXT, approver TEXT, status TEXT DEFAULT 'draft', created_at TEXT DEFAULT (datetime('now')));
       CREATE TABLE IF NOT EXISTS creative_briefs (id TEXT PRIMARY KEY, product_name TEXT NOT NULL, product_code TEXT, customer_persona TEXT, gift_recipient TEXT, occasion TEXT, emotion TEXT, main_message TEXT, visual_style TEXT, colors TEXT, prohibited_content TEXT, personalization_requirements TEXT, file_dimensions TEXT, channels TEXT, deadline TEXT, owner TEXT, status TEXT DEFAULT 'draft' CHECK(status IN ('draft','in_review','approved','completed')), created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
       CREATE TABLE IF NOT EXISTS ad_test_logs (id TEXT PRIMARY KEY, product_id TEXT, ad_channel TEXT NOT NULL, campaign_id TEXT, creative_id TEXT, angle TEXT, spend REAL DEFAULT 0, impressions INTEGER DEFAULT 0, clicks INTEGER DEFAULT 0, ctr REAL, cpc REAL, add_to_cart INTEGER, purchases INTEGER, cpa REAL, roas REAL, key_comments TEXT, conclusion TEXT, next_action TEXT, created_at TEXT DEFAULT (datetime('now')));
       CREATE TABLE IF NOT EXISTS refund_logs (id TEXT PRIMARY KEY, order_id TEXT NOT NULL, channel TEXT NOT NULL, sku TEXT, reason TEXT NOT NULL, fault TEXT, amount REAL NOT NULL, resolution TEXT, handler TEXT, status TEXT DEFAULT 'open' CHECK(status IN ('open','processed','disputed','closed')), prevention_lesson TEXT, created_at TEXT DEFAULT (datetime('now')), updated_at TEXT DEFAULT (datetime('now')));
@@ -184,6 +184,134 @@ const migrations: Array<{ name: string; sql: string }> = [
         roas REAL DEFAULT 0,
         created_at TEXT DEFAULT (datetime('now')),
         updated_at TEXT DEFAULT (datetime('now'))
+      );
+    `,
+  },
+  {
+    name: '008_support',
+    sql: `
+      ALTER TABLE support_tickets ADD COLUMN customer_email TEXT;
+      ALTER TABLE support_tickets ADD COLUMN customer_name TEXT;
+      ALTER TABLE support_tickets ADD COLUMN first_response_at TEXT;
+      ALTER TABLE support_tickets ADD COLUMN resolved_at TEXT;
+
+      CREATE TABLE IF NOT EXISTS ticket_responses (
+        id TEXT PRIMARY KEY,
+        ticket_id TEXT NOT NULL REFERENCES support_tickets(id),
+        response TEXT NOT NULL,
+        created_by TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+
+      -- Update refund_logs CHECK constraint to support Phase 8 workflow
+      PRAGMA foreign_keys=off;
+      CREATE TABLE IF NOT EXISTS refund_logs_new (
+        id TEXT PRIMARY KEY,
+        order_id TEXT NOT NULL,
+        channel TEXT NOT NULL,
+        sku TEXT,
+        reason TEXT NOT NULL,
+        fault TEXT,
+        amount REAL NOT NULL,
+        resolution TEXT,
+        handler TEXT,
+        status TEXT DEFAULT 'pending_approval' CHECK(status IN ('pending_approval','approved','processed','disputed','closed')),
+        prevention_lesson TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+      INSERT OR IGNORE INTO refund_logs_new SELECT * FROM refund_logs;
+      DROP TABLE IF EXISTS refund_logs;
+      ALTER TABLE refund_logs_new RENAME TO refund_logs;
+      PRAGMA foreign_keys=on;
+    `,
+  },
+  {
+    name: '009_fulfillment',
+    sql: `
+      CREATE TABLE IF NOT EXISTS fulfillment_orders (
+        id TEXT PRIMARY KEY,
+        order_id TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending_review' CHECK(status IN ('pending_review','in_production','quality_check','packing','shipped','delivered','returned')),
+        sku TEXT NOT NULL,
+        quantity INTEGER NOT NULL DEFAULT 1,
+        is_personalized INTEGER DEFAULT 0,
+        personalization_data TEXT,
+        personalization_preview_url TEXT,
+        production_file_url TEXT,
+        vendor_id TEXT,
+        assigned_to TEXT,
+        tracking_number TEXT,
+        carrier TEXT,
+        notes TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now'))
+      );
+      ALTER TABLE qc_logs ADD COLUMN fulfillment_order_id TEXT;
+    `,
+  },
+  {
+    name: '010_finance',
+    sql: `
+      ALTER TABLE daily_reconciliation ADD COLUMN orders_count INTEGER DEFAULT 0;
+      ALTER TABLE daily_reconciliation ADD COLUMN refund_count INTEGER DEFAULT 0;
+
+      CREATE TABLE IF NOT EXISTS pnl_by_sku (
+        id TEXT PRIMARY KEY,
+        sku TEXT NOT NULL,
+        product_id TEXT NOT NULL,
+        period TEXT NOT NULL,
+        avg_price REAL DEFAULT 0,
+        cogs REAL DEFAULT 0,
+        shipping REAL DEFAULT 0,
+        platform_fees REAL DEFAULT 0,
+        payment_fees REAL DEFAULT 0,
+        ads_allocated REAL DEFAULT 0,
+        refunds_allocated REAL DEFAULT 0,
+        gross_margin REAL DEFAULT 0,
+        contribution_margin REAL DEFAULT 0,
+        classification TEXT NOT NULL DEFAULT 'optimize' CHECK(classification IN ('scale','keep','optimize','stop')),
+        units_sold INTEGER DEFAULT 0,
+        revenue REAL DEFAULT 0,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+
+      CREATE TABLE IF NOT EXISTS finance_alerts (
+        id TEXT PRIMARY KEY,
+        type TEXT NOT NULL CHECK(type IN ('cpa_spike','refund_spike','negative_margin','payment_hold','cashflow_warning')),
+        severity TEXT NOT NULL CHECK(severity IN ('low','medium','high','critical')),
+        message TEXT NOT NULL,
+        channel TEXT,
+        value REAL,
+        created_at TEXT DEFAULT (datetime('now')),
+        acknowledged INTEGER DEFAULT 0
+      );
+    `,
+  },
+  {
+    name: '011_product_research_ip',
+    sql: `
+      ALTER TABLE product_research_sheets ADD COLUMN status TEXT DEFAULT 'draft' CHECK(status IN ('draft','in_review','approved','rejected'));
+
+      CREATE TABLE IF NOT EXISTS competitor_entries (
+        id TEXT PRIMARY KEY,
+        product_id TEXT NOT NULL,
+        competitor_name TEXT NOT NULL,
+        price REAL DEFAULT 0,
+        reviews INTEGER DEFAULT 0,
+        rating REAL DEFAULT 0,
+        main_image_url TEXT,
+        offer TEXT,
+        shipping_time TEXT,
+        key_message TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+      CREATE TABLE IF NOT EXISTS ip_blacklist (
+        id TEXT PRIMARY KEY,
+        keyword TEXT NOT NULL UNIQUE,
+        type TEXT NOT NULL CHECK(type IN ('brand','character','sports_team','university','movie','song','quote','celebrity')),
+        notes TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
       );
     `,
   },

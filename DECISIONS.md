@@ -209,3 +209,55 @@ Mỗi phase hoàn thành sẽ có 1 agent riêng đóng vai người dùng cuố
 ### ADR-028: Fix — Floating point precision in dropshipping
 - Mock product prices in `ProductResearchService.research()` now use `Math.round(value * 100) / 100` for consistent 2-decimal precision
 - Status: **ACCEPTED**
+
+### ADR-029: Fulfillment + QC Architecture (Phase 5)
+- Fulfillment service with explicit state machine: pending_review -> in_production -> quality_check -> packing -> shipped -> delivered -> returned
+- QC service with 8-step checklist (SKU, personalization, color/size, surface, packaging, photo, result, log)
+- Vendor scorecard service with 8 weighted criteria and monthly period scoring
+- All services use storage interfaces for DB agnosticism; routes provide SQLite adapters
+- `fulfillment_orders` table in migration 009 with status CHECK constraint
+- Routes mounted at `/api/fulfillment/` with sub-paths for orders, QC logs, and vendor scorecards
+- Fulfillment Coordinator agent at `agents/ecommerce-specialized/fulfillment-coordinator.md`
+- Quality Control skill at `skills/fulfillment/quality-control/SKILL.md` with 8-step SOP checklist
+- Status: **ACCEPTED**
+
+### ADR-030: Finance Architecture (Phase 6)
+- Three finance services in `packages/ecommerce-core/src/finance/`:
+  - ReconciliationService: 8-step daily reconciliation per SOP 17.2, records revenue/fees/ad spend/refunds, generates summaries with per-channel breakdowns, flags CPA spikes (>$15 target), refund rate anomalies (>5%), and negative net revenue
+  - PnLService: 9-step PnL by SKU calculation per SOP 17.3, classifies products as scale (margin >=40%, units >=100), keep (margin >=20%), optimize (margin >=0%), stop (margin <0%)
+  - FinanceAlertService: monitors reconciliation data, creates alerts with severity levels (low/medium/high/critical), acknowledgment workflow
+- All services use storage interfaces for DB agnosticism; routes provide SQLite adapters
+- Migration 010 adds orders_count/refund_count columns to daily_reconciliation, pnl_by_sku table, and finance_alerts table
+- Routes mounted at `/api/finance/` with sub-paths for reconciliation, PnL, and alerts
+- Finance Admin agent at `agents/ecommerce-specialized/finance-admin.md`
+- Daily Reconciliation skill at `skills/finance/daily-reconciliation/SKILL.md`
+- Pure business logic, no agent calls, no mock data
+- Status: **ACCEPTED**
+
+### ADR-031: Product Research + IP Architecture (Phase 7)
+- Four modules in `packages/ecommerce-core/src/product/`:
+  - `research-sheet-entity.ts`: ProductResearchSheet interface (18-field SOP Section 24 form), validateResearchSheet(), calculateScore(), isValidResearchTransition() state machine for draft -> in_review -> approved/rejected
+  - `product-scoring-service.ts`: 7-criteria scoring per SOP Section 6.4 (Search Demand 20pts, Content Potential 15pts, Profit Margin 20pts, Fulfillment Ease 15pts, Low IP Risk 15pts, Variation Potential 10pts, Season Fit 5pts), each criterion has its own pure function; calculateTotalScore() aggregates into 0-100
+  - `competitor-analysis-service.ts`: CompetitorEntry and CompetitorAnalysisReport interfaces, CompetitorAnalysisService with recordCompetitor()/getCompetitors()/generateReport() (aggregates avg price, avg rating, price range, top keywords from key messages, opportunities/threats derived from market data)
+  - `ip-check-service.ts`: Sop Section 19.2 6-step IP check, IpCheckService with checkProduct() (runs trademark/copyright/character risk checks against blacklist), addToBlacklist()/isBlacklisted()/getCheckHistory(); IpBlacklistEntry with brand/character/sports_team/university/movie/song/quote/celebrity types
+- All services use storage interfaces (CompetitorStorage, IpCheckStorage) for DB agnosticism; routes provide SQLite adapters
+- Migration 011 adds competitor_entries and ip_blacklist tables (ip_check_logs already existed in migration 003)
+- product/index.ts barrel export replaces product/entity.js direct export
+- Routes mounted at `/api/product-research/` with 10 endpoints (sheets CRUD, scoring, approval, competitors, IP check, IP blacklist)
+- Product Researcher agent at `agents/ecommerce-specialized/product-researcher.md` (enhanced SOP Section 6 specialist)
+- IP Check skill at `skills/product/ip-check/SKILL.md` with 6-step SOP workflow
+- Pure business logic, no agent calls, no mock data
+- Status: **ACCEPTED**
+
+### ADR-032: Customer Support Architecture (Phase 8)
+- Four support modules in `packages/ecommerce-core/src/support/`:
+  - `ticket-service.ts`: SupportTicket lifecycle per SOP 14.3 (10-step message handling), TicketService with create/respond/escalate/resolve operations, SLA deadline calculation (4h for refund/chargeback/complaint, 12h for others), SLA breach detection
+  - `refund-service.ts`: RefundRequest lifecycle per SOP 14.4 (8-step refund process) and SOP 27 (Refund Return Log form), role-based approval thresholds (agent $20/50%, team lead $50/100%, manager $200/200%, director unlimited), prevention lesson logging
+  - `macro-library.ts`: 4 English macros matching SOP 14.5 (tracking delays, personalization error, pre-production cancel, refund initiated), getMacroByType/getMacroByKey/personalizeMacro functions for template personalization
+  - `escalation-service.ts`: EscalationRule interface, shouldEscalate() determines when chargeback/amount-exceeding-authority triggers escalation, getEscalationLevel() maps amount to role
+- All services use storage interfaces (TicketStorage, RefundStorage) for DB agnosticism; routes provide SQLite adapters
+- Migration 008 adds columns to support_tickets (customer_email, customer_name, first_response_at, resolved_at), creates ticket_responses table, and recreates refund_logs with expanded CHECK constraint (pending_approval/approved/processed/disputed/closed)
+- Routes mounted at `/api/support/` with 12 endpoints for tickets CRUD, macros, refunds, and SLA breaches
+- Customer Support agent updated with SOP Section 14 tone, macros, escalation process, API endpoints
+- Pure business logic, no agent calls, no mock data
+- Status: **ACCEPTED**
