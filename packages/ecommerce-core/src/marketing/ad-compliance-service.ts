@@ -1,5 +1,12 @@
 import type { TaskRunner } from '../types.js'
 
+export class ComplianceParseError extends Error {
+  constructor(message: string, public readonly originalError?: unknown) {
+    super(message)
+    this.name = 'ComplianceParseError'
+  }
+}
+
 export interface AdAsset {
   platform: string
   landingPageUrl: string
@@ -15,17 +22,10 @@ export interface ComplianceResult {
 }
 
 export class AdComplianceValidationService {
-  private readonly runner?: TaskRunner
-
-  constructor(runner?: TaskRunner) {
-    this.runner = runner
-  }
+  // PR Feedback: make runner required, remove optional typing ?
+  constructor(private readonly runner: TaskRunner) {}
 
   async validateAsset(asset: AdAsset): Promise<ComplianceResult> {
-    if (!this.runner) {
-      throw new Error('TaskRunner is required for compliance validation')
-    }
-
     const result = await this.runner.routeTask(
       'marketing-compliance',
       { asset },
@@ -59,7 +59,8 @@ export class AdComplianceValidationService {
       }
     } catch (parseError) {
       const err = parseError instanceof Error ? parseError : new Error(String(parseError))
-      throw new Error(`Failed to parse compliance result: ${err.message}`)
+      // PR Feedback: throw custom error instead of generic Error
+      throw new ComplianceParseError(`Failed to parse compliance result: ${err.message}`, parseError)
     }
   }
 }
