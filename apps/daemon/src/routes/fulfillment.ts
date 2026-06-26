@@ -51,6 +51,11 @@ const fulfillmentStorage: FulfillmentStorage = {
     return rows.map(rowToFulfillmentOrder)
   },
 
+  findAll(): FulfillmentOrder[] {
+    const db = getDb()
+    return db.prepare('SELECT * FROM fulfillment_orders ORDER BY created_at DESC').all().map((r: any) => rowToFulfillmentOrder(r))
+  },
+
   insert(order: FulfillmentOrder): void {
     const db = getDb()
     db.prepare(`
@@ -212,6 +217,15 @@ fulfillmentRouter.get('/orders', (_req: any, res) => {
     const db = getDb()
     const rows = db.prepare('SELECT * FROM fulfillment_orders ORDER BY created_at DESC').all() as any[]
     res.json({ orders: rows.map(rowToFulfillmentOrder) })
+  } catch (err: any) {
+    res.status(500).json({ error: true, message: err.message })
+  }
+})
+
+fulfillmentRouter.post('/auto-advance', (_req, res) => {
+  try {
+    const advanced = fulfillmentService.autoAdvanceAll()
+    res.json({ advanced: advanced.length, orders: advanced })
   } catch (err: any) {
     res.status(500).json({ error: true, message: err.message })
   }

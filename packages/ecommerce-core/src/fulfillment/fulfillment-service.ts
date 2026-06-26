@@ -58,6 +58,7 @@ export interface FulfillmentCreateInput {
 export interface FulfillmentStorage {
   findById(id: string): FulfillmentOrder | undefined
   findByOrderId(orderId: string): FulfillmentOrder[]
+  findAll(): FulfillmentOrder[]
   insert(order: FulfillmentOrder): void
   update(id: string, updates: Partial<FulfillmentOrder>): void
 }
@@ -271,5 +272,76 @@ export class FulfillmentService {
 
   getFulfillmentStatus(orderId: string): FulfillmentOrder[] {
     return this.storage.findByOrderId(orderId)
+  }
+
+  /** Auto-advance all fulfillment orders to next eligible stage */
+  autoAdvanceAll(): FulfillmentOrder[] {
+    const all = this.storage.findAll()
+    const advanced: FulfillmentOrder[] = []
+
+    for (const order of all) {
+      try {
+        const updated = this.autoAdvanceOne(order)
+        if (updated) advanced.push(updated)
+      } catch {
+        // skip orders that can't advance
+      }
+    }
+
+    return advanced
+  }
+
+  private autoAdvanceOne(order: FulfillmentOrder): FulfillmentOrder | null {
+    const now = Date.now()
+    const updatedAt = new Date(order.updatedAt).getTime()
+    const hoursSinceUpdate = (now - updatedAt) / 3600000
+
+    switch (order.status) {
+      case 'pending_review':
+        // Auto-start production for non-personalized items or items with data
+        if (!order.isPersonalized || order.personalizationData) {
+          return this.startProduction(order.id)
+        }
+        return null
+
+      case 'in_production':
+        // Auto-complete production if file URL provided or after 24h
+        if (order.productionFileUrl || hoursSinceUpdate >= 24) {
+          if (!order.productionFileUrl) {
+            // Auto-generate a placeholder file URL
+            order = this.completeProduction(order.id, `auto://production/${order.sku}-${Date.now()}`)
+          }
+          return this.submitForQC(order.id)
+        }
+        return null
+
+      case 'quality_check':
+        // Auto-pass QC after 2 hours (production orders)
+        if (hoursSinceUpdate >= 2) {
+          return this.passQC(order.id, 'Auto-passed QC (no issues reported)')
+        }
+        return null
+
+      case 'packing':
+        // Auto-assign default carrier + tracking after 4 hours
+        if (order.trackingNumber || hoursSinceUpdate >= 4) {
+          if (!order.trackingNumber) {
+            const tracking = `AUTO-${order.sku}-${Date.now().toString(36).toUpperCase()}`
+            return this.ship(order.id, tracking, 'Standard')
+          }
+          return this.ship(order.id, order.trackingNumber, order.carrier || 'Standard')
+        }
+        return null
+
+      case 'shipped':
+        // Auto-confirm delivery after 7 days
+        if (hoursSinceUpdate >= 168) { // 7 * 24
+          return this.confirmDelivery(order.id)
+        }
+        return null
+
+      default:
+        return null
+    }
   }
 }
