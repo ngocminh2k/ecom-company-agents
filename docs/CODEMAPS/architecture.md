@@ -1,102 +1,72 @@
-<!-- Generated: 2026-06-26 | Files scanned: ~580 | Token estimate: ~950 -->
+<!-- Generated: 2026-06-26 | Files scanned: ~620 | Token estimate: ~1000 -->
 
 # AgentPulse Commerce Architecture
 
 ## System Diagram
 ```
 Web App (Next.js 16) ──HTTP──▶ Daemon (Express:7456) ──spawn──▶ CLI Agents
-         │                              │                        (Claude Code, Codex)
-    Dashboard ─────┐                SQLite ◀── 35+ REST ──▶ Agent Router
-    Research ──────┤                routes                        │
-    Launch ────────┤                    │                    Routing Matrix
-    BI ────────────┤            ┌───────┴───────┐          (11 rules A2A)
-    Orders ────────┤            │               │
-    Products ──────┘    Business Entities    Agent Tasks
-                        (pure code)          (creative only)
+         │                              │                        (Claude Code)
+    Dashboard ─────┐               SQLite ◀── 37+ REST ──▶ Agent Router
+    Research ──────┤               routes                        │
+    Launch ────────┤                   │                    Routing Matrix
+    BI ────────────┤           ┌───────┴───────┐          (11 rules A2A)
+    Orders ────────┤           │               │
+    Fulfillment ───┤   Business Entities   Agent Tasks
+    Support ───────┤   (pure code)         (creative only)
+    Finance ───────┤
+    Listings ──────┤
+    Skills ────────┘
 ```
 
 ## Source Map (Monorepo)
 ```
 apps/
-  daemon/     Express 5 + SQLite, 35+ REST routes, MCP server
-  web/        Next.js 16, React 19, Tailwind 4, 11 pages
+  daemon/     Express 5 + SQLite, 37+ REST, BYOK proxy, Chat SSE
+              24 route files (19 flat + 5 split under routes/amazon/)
+  web/        Next.js 16, React 19, Tailwind 4, 25 pages
 
 packages/
-  agent-adapter/   AgentAdapter interface, pool, routing matrix, AgentRouterService
+  agent-adapter/   AgentAdapter, pool, routing matrix (946 LOC)
   mcp-server/      stdio MCP protocol server
-  skill-system/    SKILL.md parser + executor
+  skill-system/    SKILL.md parser + executor (349 LOC)
   plugin-system/   Plugin manifest + pipeline
-  design-system/   DESIGN.md 9-section parser + tokens
-  ecommerce-core/  Business entities, state machines, channels, fulfillment, finance, support, BI, launch orchestration
-  contracts/       Shared TypeScript types
+  design-system/   DESIGN.md parser + tokens
+  ecommerce-core/  Business logic — 54 files across 12 domains
+  contracts/       Shared types
   cli/             CLI entry point
   ui/              Shared UI components
 
-skills/            SKILL.md files (30+)
-design-systems/    DESIGN.md brand files (5)
-plugins/           Plugin marketplace
-agents/            230+ agent personalities (18 divisions)
-docs/              Architecture, adapters, skills, design, plugins
+skills/            13 SKILL.md files (amazon, analytics, dropshipping, etsy, etc.)
+agents/            238 agent personalities (18 divisions)
+docs/              CODEMAPS + plan + SOP
 ```
 
 ## Data Flow
 ```
-HTTP → Express Route → validation → entity → state machine → SQLite → response
-HTTP → Express Route → TaskRunner → AgentRouter → ClaudeCode → structured JSON → response
-Web Page → api.ts fetch → Next.js proxy → daemon route → SQLite → JSON → React state
+HTTP → Express Route → validation → ecommerce-core service → SQLite → JSON
+HTTP → Express Route → AgentRouterService → ClaudeCodeAdapter → real CLI → JSON
+SSE  → /api/chat → AgentRouterService → routeTaskStream → text/event-stream
+POST → /api/proxy/{provider}/stream → fetch(LLM API) → SSE response
+Web Page → api.ts fetch → Next.js rewrite (/api/*) → daemon:7456/api/*
 ```
 
-## Route Inventory (35+)
+## Routes (37+)
 ```
 /api/health, /api/agents, /api/skills, /api/plugins, /api/design-systems
-/api/products, /api/orders, /api/campaigns, /api/suppliers
-/api/ecommerce (pod, dropshipping, marketing, analytics)
-/api/etsy (listings, disputes), /api/shopify (products, CRO, email), /api/amazon (listings, ads, account health)
-/api/fulfillment (orders, QC, vendors), /api/finance (reconciliation, PnL, alerts)
-/api/product-research (sheets, competitors, IP check), /api/support (tickets, refunds, escalation, macros)
-/api/orchestration (launch pipeline, checklist, checkpoints, readiness)
-/api/bi (dashboard, logs, SLA, alerts)
-```
-
-## Frontend Pages (11)
-```
-/ → Home (dashboard summary)
-/dashboard → KPI grid + alert feed + SLA chart
-/products → Product CRUD table
-/orders → Order listing + status badges
-/research → Research sheets list
-/research/new → Create sheet form
-/research/[id] → Sheet detail + score + approve
-/research/[id]/competitors → Competitor entries
-/research/[id]/ip-check → IP check results
-/launch → Pipeline view (5-stage kanban)
-/launch/[id] → Detail + stage bar + readiness + actions
-/launch/[id]/checklist → 17-item launch checklist
-/launch/[id]/checkpoints → Lifecycle checkpoint records
-/bi/alerts → Alert feed + SLA dashboard
-/bi/logs → Log hub (7 types)
-/bi/logs/[type] → Type-specific log listing
-/agents → Agent personality list
-/workspace → Agent workspace
-```
-
-## Web Component Tree
-```
-Layout → Sidebar + DaemonBanner
-  ├─ Home: KpiCard grid, AlertFeed
-  ├─ Research: Table → Badge → Pagination
-  ├─ Launch: Card → Badge → StageBar
-  ├─ BI: AlertFeed, logs hub
-  ├─ Products: Table → Skeleton → EmptyState → ErrorState
-  ├─ Orders: Table → Pagination
-  └─ Shared: Button, Input, Select, SearchInput, Modal, Toast
+/api/products, /api/orders, /api/campaigns, /api/ecommerce
+/api/etsy (listings), /api/shopify (products + CRO + email)
+/api/amazon (selection + listings + health + ads) — split into 4 files
+/api/fulfillment (orders + QC), /api/quality-check, /api/vendors
+/api/finance (reconciliation + PnL + alerts)
+/api/product-research (sheets + competitors + IP check)
+/api/support (tickets + refunds + macros + SLA)
+/api/orchestration (launch + checklist + checkpoints)
+/api/bi (company + channel + logs + SLA)
+/api/chat (SSE agent streaming) — NEW
+/api/proxy/{provider}/stream (BYOK, 6 providers) — NEW
 ```
 
 ## Key ADRs (see DECISIONS.md)
-- ADR-015: Business logic = pure code, no agent fallback in production
-- ADR-016: 11-phase delivery (domain → channels → fulfillment → finance → research → support → launch → BI → agents)
-- ADR-017: User Experience Review Agent — end-user test before merge
-- ADR-029: Fulfillment + QC state machines
-- ADR-030: Finance reconciliation + PnL by SKU
-- ADR-031: Product Research + IP scoring
-- ADR-032: Customer Support SLA + escalation
+- ADR-015: Business logic = pure code (ecommerce-core), no agent fallback
+- ADR-016: 11-phase delivery (all phases complete)
+- ADR-029→032: Fulfillment, Finance, Research, Support — all live
