@@ -170,6 +170,19 @@ export class TicketService {
   }
 
   /**
+   * Assign a ticket to an agent.
+   */
+  assignTicket(id: string, assignedTo: string): SupportTicket | undefined {
+    const ticket = this.storage.findById(id)
+    if (!ticket) return undefined
+
+    return this.storage.update(id, {
+      assignedTo,
+      updatedAt: new Date().toISOString(),
+    })
+  }
+
+  /**
    * Resolve a ticket.
    * SOP Section 14.3 step 9: record resolution in internal notes.
    */
@@ -198,6 +211,15 @@ export class TicketService {
    */
   getTicket(id: string): SupportTicket | undefined {
     return this.storage.findById(id)
+  }
+
+  /**
+   * Get all tickets for a customer by email.
+   */
+  getTicketsByCustomer(customerEmail: string): SupportTicket[] {
+    return this.storage
+      .findAll()
+      .filter((t) => t.customerEmail?.toLowerCase() === customerEmail.toLowerCase())
   }
 
   /**

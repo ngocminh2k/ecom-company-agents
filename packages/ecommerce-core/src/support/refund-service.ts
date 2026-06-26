@@ -180,6 +180,29 @@ export class RefundService {
   }
 
   /**
+   * Reject a refund request.
+   * Moves from pending_approval to disputed status with rejection reason.
+   */
+  rejectRefund(id: string, reason: string): RefundRequest {
+    const refund = this.storage.findById(id)
+    if (!refund) {
+      throw new Error(`Refund ${id} not found`)
+    }
+
+    if (refund.status !== 'pending_approval') {
+      throw new Error(`Refund ${id} is not pending approval (current status: ${refund.status})`)
+    }
+
+    const updated = this.storage.update(id, {
+      status: 'disputed',
+      reason,
+      updatedAt: new Date().toISOString(),
+    })
+
+    return updated!
+  }
+
+  /**
    * Get a refund request by ID.
    */
   getRefund(id: string): RefundRequest | undefined {

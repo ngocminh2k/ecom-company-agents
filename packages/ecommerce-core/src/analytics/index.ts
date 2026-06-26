@@ -4,6 +4,8 @@
  */
 import type { AnalyticsReport, TaskRunner } from '../types.js'
 
+export * from './report-service.js'
+
 export class AnalyticsService {
   private runner?: TaskRunner
 
