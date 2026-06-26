@@ -165,6 +165,19 @@ export interface QcLog {
   sku_ok?: boolean; personalization_ok?: boolean; color_size_ok?: boolean
   surface_ok?: boolean; packaging_ok?: boolean; photo_url?: string; created_at: string
 }
+export interface EtsyListing {
+  id: string; product_id: string; title: string; description?: string
+  tags?: string; price: number; quantity: number; status: string
+  etsy_listing_id?: string; url?: string; views?: number; created_at: string
+}
+export interface ShopifyProduct {
+  id: string; product_id: string; title: string; description_html?: string
+  status: string; vendor?: string; price?: number; sku?: string; created_at: string
+}
+export interface AmazonListing {
+  id: string; product_id: string; title: string; asin?: string; sku?: string
+  price?: number; status: string; fulfillment_type?: string; created_at: string
+}
 
 // ---------------------------------------------------------------------------
 // Helpers — throw on failure, no mock
@@ -347,6 +360,33 @@ export const api = {
       process: (id: string): Promise<{ refund: RefundRequest }> => apiPost(`/support/refunds/${id}/process`, {}),
     },
     slaBreaches: (): Promise<{ breaches: unknown[] }> => apiGet('/support/sla-breaches'),
+  },
+
+  // -----------------------------------------------------------------------
+  // Listings (Etsy, Shopify, Amazon)
+  // -----------------------------------------------------------------------
+  listings: {
+    etsy: {
+      list: (): Promise<{ listings: EtsyListing[] }> => apiGet('/etsy/listings'),
+      get: (id: string): Promise<{ listing: EtsyListing }> => apiGet(`/etsy/listings/${id}`),
+      create: (data: { productId: string; title: string; price: number; description?: string; tags?: string }): Promise<{ listing: EtsyListing }> => apiPost('/etsy/listings', data),
+      publish: (id: string): Promise<{ listing: EtsyListing }> => apiPost(`/etsy/listings/${id}/publish`, {}),
+      optimization: (id: string): Promise<{ suggestions: unknown[] }> => apiGet(`/etsy/listings/${id}/optimization`),
+    },
+    shopify: {
+      list: (): Promise<{ products: ShopifyProduct[] }> => apiGet('/shopify/products'),
+      get: (id: string): Promise<{ product: ShopifyProduct }> => apiGet(`/shopify/products/${id}`),
+      create: (data: { productId: string; title: string; price?: number }): Promise<{ product: ShopifyProduct }> => apiPost('/shopify/products', data),
+      preAdsAudit: (id: string): Promise<{ audit: unknown }> => apiGet(`/shopify/products/${id}/pre-ads-audit`),
+      croSuggestions: (id: string): Promise<{ suggestions: unknown[] }> => apiGet(`/shopify/products/${id}/cro-suggestions`),
+    },
+    amazon: {
+      list: (): Promise<{ listings: AmazonListing[] }> => apiGet('/amazon/listings'),
+      get: (id: string): Promise<{ listing: AmazonListing }> => apiGet(`/amazon/listings/${id}`),
+      create: (data: { productId: string; title: string; price?: number }): Promise<{ listing: AmazonListing }> => apiPost('/amazon/listings', data),
+      evaluateSelection: (data: { productId: string; price: number; cost: number }): Promise<{ evaluation: unknown }> => apiPost('/amazon/selection/evaluate', data),
+      healthScore: (): Promise<{ health: unknown }> => apiGet('/amazon/health/score'),
+    },
   },
 
   // -----------------------------------------------------------------------
