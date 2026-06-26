@@ -207,6 +207,16 @@ fulfillmentRouter.get('/vendor-comparison', (_req: any, res) => {
 // Fulfillment order routes (/orders/*)
 // ---------------------------------------------------------------------------
 
+fulfillmentRouter.get('/orders', (_req: any, res) => {
+  try {
+    const db = getDb()
+    const rows = db.prepare('SELECT * FROM fulfillment_orders ORDER BY created_at DESC').all() as any[]
+    res.json({ orders: rows.map(rowToFulfillmentOrder) })
+  } catch (err: any) {
+    res.status(500).json({ error: true, message: err.message })
+  }
+})
+
 fulfillmentRouter.post('/orders', (req: any, res) => {
   try {
     const { orderId, sku, quantity, isPersonalized, personalizationData, vendorId } = req.body

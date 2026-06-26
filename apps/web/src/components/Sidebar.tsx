@@ -19,6 +19,7 @@ const nav = [
   { href: '/launch', label: 'Launch', icon: Rocket },
   { href: '/bi/logs', label: 'BI Logs', icon: BarChart3 },
   { href: '/bi/alerts', label: 'Alerts', icon: AlertTriangle },
+  { href: '/fulfillment', label: 'Fulfillment', icon: Truck },
 ]
 
 export default function Sidebar() {
