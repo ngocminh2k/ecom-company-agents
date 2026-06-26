@@ -1,72 +1,57 @@
-<!-- Generated: 2026-06-26 | Files scanned: ~580 | Token estimate: ~600 -->
+<!-- Generated: 2026-06-26 | Files scanned: ~620 | Token estimate: ~700 -->
 
 # Backend Architecture
 
-## Daemon Entry
+## Entry
 ```
-server.ts (100 lines) → app.ts (94 lines) → Express app factory
-  ├─ Middleware: express.json, CORS (opt-in), context injection
+server.ts (102) → app.ts (98) → Express app
+  ├─ middleware: express.json(10mb), CORS (ENABLED), context→req
   └─ 22 route mounts under /api/*
 ```
 
 ## Route → Service Mapping
 
-| Prefix | Router | Service | Key Methods |
-|--------|--------|---------|-------------|
-| /api/health | health.ts | — | getStatus |
-| /api/agents | agents.ts | AgentAdapterPool | list, getSkills, getDesigns |
-| /api/products | products.ts | SQLite | list, create |
-| /api/orders | orders.ts | SQLite | list |
-| /api/ecommerce | ecommerce.ts | — | summary, pod, dropshipping, marketing |
-| /api/etsy/listings | etsy.ts | EtsyListingService | list, create, publish, update |
-| /api/shopify | shopify.ts | ShopifyService | list, create, validate, preAdsAudit, croSuggest |
-| /api/amazon | amazon.ts | AmazonListingService + AmazonAccountHealthService + AmazonAdsService | list, validate, create, campaign CRUD |
-| /api/fulfillment | fulfillment.ts | FulfillmentService + QCService + VendorService | create, advanceQC, scorecard |
-| /api/finance | finance.ts | ReconciliationService + PnLService + AlertService | reconcile, pnlBySku, checkAlerts |
-| /api/product-research | product-research.ts | ResearchSheetService + CompetitorAnalysisService + IpCheckService | sheets CRUD, score, competitors, ipCheck |
-| /api/support | support.ts | TicketService + RefundService + EscalationService | tickets CRUD, refunds, escalation, macros |
-| /api/orchestration | orchestration.ts | LaunchOrchestrator + ChecklistService + LifecycleStateService | start, advance, checklist, checkpoints, readiness |
-| /api/bi | bi.ts | DashboardService + BiLogsService + SlaMonitorService | company dashboard, 7 log types, SLA |
+| Prefix | File | Service | Lines |
+|--------|------|---------|-------|
+| /api/health | health.ts | — | 12 |
+| /api/agents | agents.ts | AgentAdapterPool + scanAgentPersonalities | 93 |
+| /api/skills | skills.ts | scanSkillsDir + SkillExecutor | 160 |
+| /api/products | products.ts | SQLite | 72 |
+| /api/orders | orders.ts | SQLite | 59 |
+| /api/ecommerce | ecommerce.ts | PodProductDesigner + ResearchService + AnalyticsService + CampaignCreator + AdCreativeGenService | 153 |
+| /api/etsy/listings | etsy.ts | EtsyListingService | 187 |
+| /api/shopify | shopify.ts | ShopifyService + CroService + EmailFlows | 142 |
+| /api/amazon/* | **rout... | AmazonListingService + SelectionService + HealthService + AdsService | * |
+| /api/fulfillment | fulfillment.ts | FulfillmentService + QCService + VendorScorecardService | 477 |
+| /api/support | support.ts | TicketService + RefundService + EscalationService | 482 |
+| /api/finance | finance.ts | ReconciliationService + PnLService + AlertService | 425 |
+| /api/product-research | product-research.ts | ResearchSheetService + CompetitorService + IpCheckService | 418 |
+| /api/orchestration | orchestration.ts | LaunchOrchestrator + ChecklistService + LifecycleStateService | 471 |
+| /api/bi | bi.ts | DashboardService + BiLogsService + SlaMonitorService | 841 |
+| /api/chat | chat.ts | AgentRouterService.routeTaskStream (SSE) | 63 |
+| /api/proxy | proxy.ts | fetch → LLM API (6 providers + SSRF guard) | 137 |
 
-## Orchestration Routes (P0)
+\* `/api/amazon` split into: `routes/amazon/listings.ts` (72), `health.ts` (36), `ads.ts` (52), `storage.ts` (67), `health-storage.ts` (48), `ads-storage.ts` (77), `index.ts` (12)
+
+## New Routes (post-refactor)
 ```
-POST  /api/orchestration/              → startLaunch({ product_id })
-GET   /api/orchestration/              → list all orchestrations
-GET   /api/orchestration/:id           → get by ID
-POST  /api/orchestration/:id/advance   → advanceStage (auto nextStage)
-POST  /api/orchestration/:id/complete  → completeStage
-POST  /api/orchestration/:id/block     → setBlocked(reason)
-POST  /api/orchestration/:id/flags     → updateLaunchFlags
-GET   /api/orchestration/:id/readiness → { ready, checks[] }
-GET   /api/orchestration/:id/checklist → items[]
-POST  /api/orchestration/:id/checklist/init
-POST  /api/orchestration/:id/checklist/:itemId/complete
-GET   /api/orchestration/:id/checklist/blocked
-POST  /api/orchestration/:id/checkpoints → recordCheckpoint
-GET   /api/orchestration/:id/checkpoints
+GET  /api/chat?skill=&message= → SSE stream of agent response
+POST /api/proxy/{anthropic,openai,google,azure,ollama}/stream → BYOK LLM proxy
 ```
 
-## E-Commerce Core Modules
+## Agent Dispatch Flow
 ```
-orchestration/  LaunchOrchestrator, LaunchChecklistService, LifecycleStateService
-channels/       Etsy, Shopify, Amazon (entities + services + state machines)
-fulfillment/    FulfillmentService, QualityCheckService, VendorScorecardService
-finance/        ReconciliationService, PnLService, FinanceAlertService
-product/        ResearchSheetEntity, ProductScoringService, CompetitorAnalysisService, IpCheckService
-support/        TicketService, RefundService, MacroLibrary, EscalationService
-bi/             DashboardService, BiLogsService, SlaMonitorService
+/api/skills/:id/execute → scanSkillsDir → find skill → 
+  AgentRouterService.routeTask(taskType, inputs) →
+    RoutingMatrix.findSpecialists → AgentAdapterPool.resolveForTask →
+      ClaudeCodeAdapter.run(params) → spawn(claude, ..., {cwd}) →
+        SKILL.md read by Claude → structured output → JSON response
+
+/api/chat → AgentRouterService.routeTaskStream → SSE events →
+  { type: "thinking" | "text_delta" | "done" | "error" }
 ```
 
-## Migrations (12 total)
+## Split Status
 ```
-001_initial → projects, conversations, messages, skills, plugins
-002_ecommerce → products, orders, campaigns, suppliers, customers
-003_sop_forms → research sheets, creative briefs, ad_test_logs, refunds, IP checks, incidents
-004_shopify_columns → price, compare_at_price, sku, inventory
-005-007_amazon → listing columns, account health, campaigns
-008_support → ticket columns, responses, refunds
-009_fulfillment → fulfillment_orders, QC FK
-010_finance → pnl_by_sku, finance_alerts, reconciliation columns
-011_product_research_ip → competitor_entries, ip_blacklist
-012_phases_9_10 → launch_orchestrations + indexes
-```
+✅ Amazon: 663 → 6 files (routes/amazon/*)
+⏸️ BI (841), Fulfillment (477): still flat — need storage interface cleanup

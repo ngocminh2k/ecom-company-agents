@@ -2,69 +2,34 @@
 
 # Data Architecture
 
-## Core Tables
-```
-products                   20 columns — pod/dropshipping/digital, status state machine
-orders                     28 columns — full lifecycle, personalization, refunds
-customers                  10 columns — multi-channel, order aggregations
-suppliers                  7 columns — Printful/Printify/AliExpress/custom
-campaigns                  12 columns — multi-platform, budget, metrics
-```
+## Core Tables (7)
+- products, orders, campaigns, suppliers, customers, projects, conversations
 
-## E-Commerce Tables
-```
-etsy_listings              16 cols — listing CRUD, SEO, Etsy sync
-shopify_products           13 cols — product sync, SEO, personalization
-amazon_listings            13 cols — ASIN, FBM/FBA, account health
-fulfillment_orders         16 cols — status machine (8 states)
-qc_logs                    11 cols — 8-step QC checklist
-support_tickets            14 cols — SLA, macro, escalation
-refund_logs                12 cols — approval workflow
-```
+## Channel Tables (5)
+- etsy_listings (16 cols), shopify_products (13), amazon_listings (13)
+- amazon_account_health + incidents, amazon_campaigns + performance
 
-## Product Research Tables
-```
-product_research_sheets    22 cols — 17 SOP fields, score, approval
-competitor_entries         11 cols — price, rating, key messages
-ip_blacklist               4 cols  — brand/character/celebrity types
-ip_check_logs              12 cols — 6-step IP check
-```
+## Product Research (4)
+- product_research_sheets (22), competitor_entries (11), ip_blacklist (4), ip_check_logs (12)
 
-## Finance Tables
-```
-daily_reconciliation       9 cols  — per-channel daily summary
-pnl_by_sku                 16 cols — SKU-level PnL, classification
-finance_alerts             8 cols  — CPA/refund/margin alerts
-```
+## Finance (3)
+- daily_reconciliation (9), pnl_by_sku (16), finance_alerts (8)
 
-## Launch Orchestration Tables
-```
-launch_orchestrations      11 cols — 5-stage pipeline, 6 launch flags
-launch_checklist           9 cols  — 17-item pre-launch checklist
-product_lifecycle          9 cols  — 3/7/14/30 day checkpoints
-```
+## Launch Orchestration (3)
+- launch_orchestrations (11), launch_checklist (9), product_lifecycle (9)
 
-## BI Tables
-```
-listing_logs               11 cols — listing publish history
-channel_launch_logs        8 cols  — channel launch tracking
-order_issue_logs           8 cols  — issue tracking
-ad_test_logs               16 cols — ad test results
-creative_briefs            16 cols — SOP Section 7 brief
-incident_logs              11 cols — platform incidents
-sla_events                 7 cols  — SLA breach monitoring
-cro_logs                   9 cols  — A/B test results
-```
+## Fulfillment (3)
+- fulfillment_orders (16), qc_logs (11), vendor_scorecards (14)
 
-## Migration History
-```
-001 → 012: 12 migrations, incremental schema evolution
-Latest: 012_phases_9_10 (launch_orchestrations + indexes)
-```
+## Support (3)
+- support_tickets (14), ticket_responses, refund_logs (12)
 
-## Relationships
+## BI + Logs (7)
+- listing_logs, channel_launch_logs, order_issue_logs, ad_test_logs
+- creative_briefs, incident_logs, sla_events
+
+## Migrations: 12
 ```
-products ──→ orders, etsy_listings, shopify_products, amazon_listings
-products ──→ launch_orchestrations, launch_checklist, product_lifecycle
-orders ────→ fulfillment_orders, qc_logs, refund_logs, support_tickets
+001 → 011: Domain + channel + support (original Phase 1-8)
+012: launch_orchestrations + indexes (Phase 9-10)
 ```
