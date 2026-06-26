@@ -63,7 +63,7 @@ export default function SkillsPage() {
     setRunning(true)
     setResult(null)
     try {
-      const res = await fetch(`/api/skills/${selectedSkill.id}/execute`, {
+      const res = await fetch(`http://127.0.0.1:7456/api/skills/${selectedSkill.id}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ inputs }),

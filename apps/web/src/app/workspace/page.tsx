@@ -44,7 +44,7 @@ export default function WorkspacePage() {
     const skillId = selectedSkill || findBestSkill(userMsg)
 
     try {
-      const res = await fetch(`/api/skills/${skillId}/execute`, {
+      const res = await fetch(`http://127.0.0.1:7456/api/skills/${skillId}/execute`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
