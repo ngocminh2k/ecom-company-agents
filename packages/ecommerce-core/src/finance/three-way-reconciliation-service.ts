@@ -3,7 +3,9 @@ export type ReconciliationMatchStatus =
   | 'unmatched_missing_psp' 
   | 'unmatched_missing_wms' 
   | 'unmatched_revenue_mismatch' 
-  | 'unmatched_fee_mismatch';
+  | 'unmatched_fee_mismatch'
+  | 'unmatched_orphan_psp'
+  | 'unmatched_orphan_wms';
 
 export interface OMSOrderRecord {
   orderId: string;
@@ -32,6 +34,8 @@ export interface OrderReconciliationResult {
   reconciledAt: string;
 }
 
+const EPSILON = 0.001;
+
 export class ThreeWayReconciliationService {
   /**
    * Performs a 3-way reconciliation for a batch of orders.
@@ -43,18 +47,21 @@ export class ThreeWayReconciliationService {
    * 2. If an order in OMS has no corresponding WMS record -> 'unmatched_missing_wms'
    * 3. If expectedRevenue != settledAmount -> 'unmatched_revenue_mismatch'
    * 4. If expectedCarrierFee != actualCarrierFee -> 'unmatched_fee_mismatch'
-   * 5. Otherwise -> 'matched'
+   * 5. If PSP has a record but OMS doesn't -> 'unmatched_orphan_psp'
+   * 6. If WMS has a record but OMS doesn't -> 'unmatched_orphan_wms'
+   * 7. Otherwise -> 'matched'
    */
   reconcileOrders(
     omsRecords: OMSOrderRecord[],
     pspRecords: PSPBankRecord[],
-    wmsRecords: WMSCarrierRecord[]
+    wmsRecords: WMSCarrierRecord[],
+    reconciledAt: string = new Date().toISOString()
   ): OrderReconciliationResult[] {
     const pspMap = new Map<string, PSPBankRecord>(pspRecords.map(r => [r.orderId, r]));
     const wmsMap = new Map<string, WMSCarrierRecord>(wmsRecords.map(r => [r.orderId, r]));
-    const reconciledAt = new Date().toISOString();
+    const omsMap = new Set<string>(omsRecords.map(r => r.orderId));
 
-    return omsRecords.map(oms => {
+    const results: OrderReconciliationResult[] = omsRecords.map(oms => {
       const psp = pspMap.get(oms.orderId);
       const wms = wmsMap.get(oms.orderId);
 
@@ -72,7 +79,7 @@ export class ThreeWayReconciliationService {
         return {
           orderId: oms.orderId,
           status: 'unmatched_missing_wms',
-          revenueDiscrepancy: Math.abs(oms.expectedRevenue - psp.settledAmount) > 0.001 
+          revenueDiscrepancy: Math.abs(oms.expectedRevenue - psp.settledAmount) > EPSILON 
             ? (oms.expectedRevenue - psp.settledAmount) 
             : 0,
           feeDiscrepancy: oms.expectedCarrierFee,
@@ -84,8 +91,8 @@ export class ThreeWayReconciliationService {
       const revenueDiff = oms.expectedRevenue - psp.settledAmount;
       const feeDiff = oms.expectedCarrierFee - wms.actualCarrierFee;
       
-      const hasRevenueMismatch = Math.abs(revenueDiff) > 0.001;
-      const hasFeeMismatch = Math.abs(feeDiff) > 0.001;
+      const hasRevenueMismatch = Math.abs(revenueDiff) > EPSILON;
+      const hasFeeMismatch = Math.abs(feeDiff) > EPSILON;
 
       let status: ReconciliationMatchStatus = 'matched';
       if (hasRevenueMismatch) {
@@ -102,5 +109,31 @@ export class ThreeWayReconciliationService {
         reconciledAt
       };
     });
+
+    for (const psp of pspRecords) {
+      if (!omsMap.has(psp.orderId)) {
+        results.push({
+          orderId: psp.orderId,
+          status: 'unmatched_orphan_psp',
+          revenueDiscrepancy: -psp.settledAmount,
+          feeDiscrepancy: 0,
+          reconciledAt
+        });
+      }
+    }
+
+    for (const wms of wmsRecords) {
+      if (!omsMap.has(wms.orderId)) {
+        results.push({
+          orderId: wms.orderId,
+          status: 'unmatched_orphan_wms',
+          revenueDiscrepancy: 0,
+          feeDiscrepancy: -wms.actualCarrierFee,
+          reconciledAt
+        });
+      }
+    }
+
+    return results;
   }
 }
