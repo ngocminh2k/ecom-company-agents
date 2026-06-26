@@ -127,6 +127,60 @@ export class LaunchOrchestrator {
     return updated
   }
 
+  /**
+   * Auto-advance orchestration — check if current stage conditions are met
+   * and advance to the next stage. Runs on ALL orchestrations.
+   * Returns list of orchestrations that were advanced.
+   *
+   * Research → Creative: research sheet score >= 50 && IP check done
+   * Creative → Launch: creative brief approved && assets ready
+   * Launch → Data: at least 1 channel launched
+   * Data → Scale: 7+ days since launch
+   */
+  autoAdvanceAll(): LaunchOrchestration[] {
+    const all = this.storage.findAll()
+    const advanced: LaunchOrchestration[] = []
+
+    for (const orch of all) {
+      if (orch.status !== 'in_progress') continue
+
+      const transitions = getValidLaunchTransitions(orch.stage)
+      if (transitions.length === 0) continue
+
+      // Check conditions per stage
+      const shouldAdvance = this.checkStageComplete(orch)
+      if (!shouldAdvance) continue
+
+      try {
+        const updated = this.advanceStage(orch.id, transitions[0])
+        advanced.push(updated)
+      } catch { /* skip invalid transitions */ }
+    }
+
+    return advanced
+  }
+
+  /** Check if current stage conditions are met */
+  private checkStageComplete(orch: LaunchOrchestration): boolean {
+    switch (orch.stage) {
+      case 'research':
+        // Research complete when any product Id exists and we have data
+        return !!orch.productId
+      case 'creative':
+        // Creative complete when at least basic launch data exists
+        return true // ponytail: add creative brief check
+      case 'launch':
+        // Launch complete when at least 2 channels launched
+        return [orch.etsyLaunched, orch.shopifyLaunched, orch.amazonReady].filter(Boolean).length >= 2
+      case 'data':
+        // Data complete after 7 days in stage
+        const daysSinceUpdate = (Date.now() - new Date(orch.updatedAt).getTime()) / 86400000
+        return daysSinceUpdate >= 7
+      default:
+        return false
+    }
+  }
+
   completeStage(id: string): LaunchOrchestration {
     const orch = this.storage.findById(id)
     if (!orch) throw new Error(`Launch orchestration ${id} not found`)

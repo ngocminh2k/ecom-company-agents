@@ -263,12 +263,25 @@ orchestrationRouter.post('/', (req: any, res) => {
 })
 
 /**
+ * Auto-advance all eligible orchestrations.
+ * POST /api/orchestration/auto-advance
+ */
+orchestrationRouter.post('/auto-advance', (_req: any, res) => {
+  try {
+    const advanced = orchestrator.autoAdvanceAll()
+    res.json({ advanced: advanced.length, orchestrations: advanced.map(toApiOrch) })
+  } catch (err: any) {
+    res.status(500).json({ error: true, message: err.message })
+  }
+})
+
+/**
  * List all orchestrations.
  * GET /api/orchestration/
  */
 orchestrationRouter.get('/', (_req: any, res) => {
   try {
-    const all = orchestrator.getAll()
+    const all = orchStorage.findAll()
     res.json({ orchestrations: all.map(toApiOrch) })
   } catch (err: any) {
     res.status(500).json({ error: true, message: err.message })
