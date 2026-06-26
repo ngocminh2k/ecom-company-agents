@@ -181,3 +181,116 @@ export class ReconciliationService {
     }
   }
 }
+
+export interface RevenueTransaction {
+  id: string
+  channel: 'Shopify' | 'Etsy'
+  sku: string
+  quantity: number
+  grossRevenue: number
+  platformFee: number
+  date: string
+}
+
+export interface CostTransaction {
+  id: string
+  sku: string
+  quantity: number
+  cogs: number
+  shippingCost: number
+  vendor: 'Printify' | string
+  date: string
+}
+
+export interface AdSpend {
+  id: string
+  channel: 'Meta Ads' | 'Google Ads' | string
+  campaignId: string
+  sku: string
+  spend: number
+  date: string
+}
+
+export interface SKUMarginReport {
+  sku: string
+  unitsSold: number
+  grossRevenue: number
+  platformFees: number
+  cogs: number
+  shippingCost: number
+  adSpend: number
+  netMargin: number
+  marginPercentage: number
+}
+
+export class FinanceReconciliationService {
+  /**
+   * Compute true SKU-level margin across multi-channel inputs.
+   */
+  computeSKUMargin(
+    revenues: RevenueTransaction[],
+    costs: CostTransaction[],
+    ads: AdSpend[]
+  ): SKUMarginReport[] {
+    const reportMap = new Map<string, SKUMarginReport>()
+
+    const getReport = (sku: string): SKUMarginReport => {
+      if (!reportMap.has(sku)) {
+        reportMap.set(sku, {
+          sku,
+          unitsSold: 0,
+          grossRevenue: 0,
+          platformFees: 0,
+          cogs: 0,
+          shippingCost: 0,
+          adSpend: 0,
+          netMargin: 0,
+          marginPercentage: 0,
+        })
+      }
+      return reportMap.get(sku)!
+    }
+
+    for (const rev of revenues) {
+      const report = getReport(rev.sku)
+      report.unitsSold += rev.quantity
+      report.grossRevenue += rev.grossRevenue
+      report.platformFees += rev.platformFee
+    }
+
+    for (const cost of costs) {
+      const report = getReport(cost.sku)
+      report.cogs += cost.cogs
+      report.shippingCost += cost.shippingCost
+    }
+
+    for (const ad of ads) {
+      const report = getReport(ad.sku)
+      report.adSpend += ad.spend
+    }
+
+    const result = Array.from(reportMap.values()).map(report => {
+      // Calculate net margin
+      // Net Margin = Gross Revenue - Platform Fees - COGS - Shipping Cost - Ad Spend
+      const netMargin = report.grossRevenue - report.platformFees - report.cogs - report.shippingCost - report.adSpend
+      
+      const marginPercentage = report.grossRevenue > 0 
+        ? (netMargin / report.grossRevenue) * 100 
+        : 0
+
+      // Return new immutable object with updated calculations and rounded to 2 decimal places
+      return {
+        ...report,
+        netMargin: Math.round(netMargin * 100) / 100,
+        marginPercentage: Math.round(marginPercentage * 100) / 100,
+        grossRevenue: Math.round(report.grossRevenue * 100) / 100,
+        platformFees: Math.round(report.platformFees * 100) / 100,
+        cogs: Math.round(report.cogs * 100) / 100,
+        shippingCost: Math.round(report.shippingCost * 100) / 100,
+        adSpend: Math.round(report.adSpend * 100) / 100,
+      }
+    })
+
+    return result
+  }
+}
