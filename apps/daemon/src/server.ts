@@ -3,7 +3,8 @@
  */
 import { readFileSync, existsSync, mkdirSync } from 'node:fs'
 import { join, dirname } from 'node:path'
-import { getConfig, loadConfig } from './config.js'
+import { fileURLToPath } from 'node:url'
+import { getConfig, loadConfig, MONOREPO_ROOT } from './config.js'
 import { getDb, closeDb } from './db.js'
 import { createApp, type DaemonContext } from './app.js'
 import { AgentAdapterPool, MockAdapter, ClaudeCodeAdapter, RoutingMatrix, createDefaultRoutingRules, scanAgentPersonalities, AgentRouterService } from '@ngocminh2k/agent-adapter'
@@ -46,14 +47,15 @@ async function main() {
   const routingMatrix = new RoutingMatrix(createDefaultRoutingRules())
   console.log(`[Router] ${routingMatrix.toJSON().length} routing rules loaded`)
 
-  // Load agent personalities
-  const agentsDir = join(process.cwd(), 'agents')
+  // Load agent personalities (resolve relative to monorepo root via config)
+  const agentsDir = join(dirname(fileURLToPath(import.meta.url)), '..', '..', '..', 'agents')
   const personalities = scanAgentPersonalities(agentsDir)
   console.log(`[Agents] ${personalities.length} agent personalities loaded (${new Set(personalities.map(p => p.division)).size} divisions)`)
+  console.log(`[Agents] Path: ${agentsDir}`)
 
   // Initialize Agent Router Service (bridges skills ↔ routing matrix ↔ adapter pool)
   const agentRouter = new AgentRouterService(pool, routingMatrix, {
-    cwd: process.cwd(),
+    cwd: MONOREPO_ROOT,
     defaultTimeoutMs: 300_000,
     skillDirectories: [config.SKILLS_DIR],
     designSystemDirectories: [config.DESIGN_SYSTEMS_DIR],
