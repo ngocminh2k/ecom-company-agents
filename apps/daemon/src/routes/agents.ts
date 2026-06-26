@@ -2,6 +2,7 @@ import { Router, type Router as RouterType } from 'express'
 import type { DaemonContext } from '../app.js'
 import { scanAgentPersonalities } from '@ngocminh2k/agent-adapter'
 import { join } from 'node:path'
+import { MONOREPO_ROOT } from '../config.js'
 
 export const agentsRouter: RouterType = Router()
 
@@ -18,8 +19,8 @@ agentsRouter.get('/', async (req: any, res) => {
     type: 'adapter' as const,
   }))
 
-  // Load personalities
-  const personalities = scanAgentPersonalities(join(process.cwd(), 'agents'))
+  // Load personalities (resolve from monorepo root, not process.cwd())
+  const personalities = scanAgentPersonalities(join(MONOREPO_ROOT, 'agents'))
   const byDivision: Record<string, typeof personalities> = {}
   for (const p of personalities) {
     if (!byDivision[p.division]) byDivision[p.division] = []
@@ -73,8 +74,8 @@ agentsRouter.get('/:agentId/capabilities', (req: any, res) => {
     })
   }
 
-  // Check personalities
-  const personalities = scanAgentPersonalities(join(process.cwd(), 'agents'))
+  // Check personalities (resolve from monorepo root)
+  const personalities = scanAgentPersonalities(join(MONOREPO_ROOT, 'agents'))
   const personality = personalities.find((p) => p.id === req.params.agentId)
   if (personality) {
     return res.json({
