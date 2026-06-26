@@ -253,60 +253,91 @@ export class FinanceReconciliationService {
   /**
    * Compute true SKU-level margin across multi-channel inputs.
    */
+  /**
+   * Compute true SKU-level margin across multi-channel inputs.
+   * PR Feedback: Use strict immutability - mapping function returning new object instead of mutating map entries.
+   */
   computeSKUMargin(
     revenues: RevenueTransaction[],
     costs: CostTransaction[],
     ads: AdSpend[],
     refunds: RefundTransaction[] = []
   ): SKUMarginReport[] {
-    const reportMap = new Map<string, SKUMarginReport>()
+    const getEmptyReport = (sku: string): SKUMarginReport => ({
+      sku,
+      unitsSold: 0,
+      grossRevenue: 0,
+      platformFees: 0,
+      paymentProcessingFees: 0,
+      cogs: 0,
+      shippingCost: 0,
+      adSpend: 0,
+      refundsAndRemakes: 0,
+      netMargin: 0,
+      marginPercentage: 0,
+    })
 
-    const getReport = (sku: string): SKUMarginReport => {
-      if (!reportMap.has(sku)) {
-        reportMap.set(sku, {
-          sku,
-          unitsSold: 0,
-          grossRevenue: 0,
-          platformFees: 0,
-          paymentProcessingFees: 0,
-          cogs: 0,
-          shippingCost: 0,
-          adSpend: 0,
-          refundsAndRemakes: 0,
-          netMargin: 0,
-          marginPercentage: 0,
-        })
-      }
-      return reportMap.get(sku)!
+    const initialMap = new Map<string, SKUMarginReport>()
+    const skuSet = new Set([
+      ...revenues.map(r => r.sku),
+      ...costs.map(c => c.sku),
+      ...ads.map(a => a.sku),
+      ...refunds.map(r => r.sku),
+    ])
+
+    for (const sku of skuSet) {
+      initialMap.set(sku, getEmptyReport(sku))
     }
 
-    for (const rev of revenues) {
-      const report = getReport(rev.sku)
-      report.unitsSold += rev.quantity
-      report.grossRevenue += Math.round(rev.grossRevenue * 100)
-      report.platformFees += Math.round(rev.platformFee * 100)
-      if (rev.paymentProcessingFee) {
-        report.paymentProcessingFees += Math.round(rev.paymentProcessingFee * 100)
-      }
-    }
+    // Process revenues
+    const withRevenues = revenues.reduce((acc, rev) => {
+      const current = acc.get(rev.sku) || getEmptyReport(rev.sku)
+      const next = new Map(acc)
+      next.set(rev.sku, {
+        ...current,
+        unitsSold: current.unitsSold + rev.quantity,
+        grossRevenue: current.grossRevenue + Math.round(rev.grossRevenue * 100),
+        platformFees: current.platformFees + Math.round(rev.platformFee * 100),
+        paymentProcessingFees: current.paymentProcessingFees + Math.round((rev.paymentProcessingFee ?? 0) * 100)
+      })
+      return next
+    }, initialMap)
 
-    for (const cost of costs) {
-      const report = getReport(cost.sku)
-      report.cogs += Math.round(cost.cogs * 100)
-      report.shippingCost += Math.round(cost.shippingCost * 100)
-    }
+    // Process costs
+    const withCosts = costs.reduce((acc, cost) => {
+      const current = acc.get(cost.sku) || getEmptyReport(cost.sku)
+      const next = new Map(acc)
+      next.set(cost.sku, {
+        ...current,
+        cogs: current.cogs + Math.round(cost.cogs * 100),
+        shippingCost: current.shippingCost + Math.round(cost.shippingCost * 100)
+      })
+      return next
+    }, withRevenues)
 
-    for (const ad of ads) {
-      const report = getReport(ad.sku)
-      report.adSpend += Math.round(ad.spend * 100)
-    }
+    // Process ads
+    const withAds = ads.reduce((acc, ad) => {
+      const current = acc.get(ad.sku) || getEmptyReport(ad.sku)
+      const next = new Map(acc)
+      next.set(ad.sku, {
+        ...current,
+        adSpend: current.adSpend + Math.round(ad.spend * 100)
+      })
+      return next
+    }, withCosts)
 
-    for (const ref of refunds) {
-      const report = getReport(ref.sku)
-      report.refundsAndRemakes += Math.round(ref.amount * 100)
-    }
+    // Process refunds
+    const finalMap = refunds.reduce((acc, ref) => {
+      const current = acc.get(ref.sku) || getEmptyReport(ref.sku)
+      const next = new Map(acc)
+      next.set(ref.sku, {
+        ...current,
+        refundsAndRemakes: current.refundsAndRemakes + Math.round(ref.amount * 100)
+      })
+      return next
+    }, withAds)
 
-    const result = Array.from(reportMap.values()).map(report => {
+    const result = Array.from(finalMap.values()).map(report => {
       // Calculate net margin using integer cents
       // Net Margin = Gross Revenue - Platform Fees - Payment Processing Fees - COGS - Shipping Cost - Ad Spend - Refunds
       const netMarginCents = report.grossRevenue - report.platformFees - report.paymentProcessingFees - report.cogs - report.shippingCost - report.adSpend - report.refundsAndRemakes
