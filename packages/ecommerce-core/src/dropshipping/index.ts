@@ -95,6 +95,9 @@ export class SupplierImportService {
   }
 }
 
+export { SupplierService } from './supplier-service.js'
+export type { Supplier, SupplierStatus, AddSupplierInput, SupplierStorage } from './supplier-service.js'
+
 export class OrderProcessorService {
   private runner?: TaskRunner
 

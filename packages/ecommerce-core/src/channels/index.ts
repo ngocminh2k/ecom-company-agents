@@ -1,3 +1,5 @@
 export * from './amazon/index.js'
 export * from './etsy/index.js'
 export * from './shopify/index.js'
+export { ChannelSyncService } from './channel-sync-service.js'
+export type { ChannelListing, ChannelListingStatus, SyncInventoryInput, Discrepancy, ChannelSyncStorage } from './channel-sync-service.js'
