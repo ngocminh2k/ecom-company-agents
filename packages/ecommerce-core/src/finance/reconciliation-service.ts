@@ -252,7 +252,7 @@ export interface SKUMarginReport {
 export class FinanceReconciliationService {
   /**
    * Compute true SKU-level margin across multi-channel inputs.
-   * PR Feedback: Use strict immutability - mapping function returning new object instead of mutating map entries.
+   * Processes all data immutably by applying reductions to create a new mapped object.
    */
   computeSKUMargin(
     revenues: RevenueTransaction[],
