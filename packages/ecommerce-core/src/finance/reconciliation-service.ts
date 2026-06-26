@@ -94,8 +94,8 @@ export class ReconciliationService {
       ordersCount: input.ordersCount,
       refundCount: input.refundCount,
       notes: input.notes,
-      paymentProcessingFees: 0,
-      refundsAndRemakes: 0,
+      paymentProcessingFees: existing?.paymentProcessingFees ?? 0,
+      refundsAndRemakes: existing?.refundsAndRemakes ?? 0,
       createdAt: existing?.createdAt ?? now,
     }
 

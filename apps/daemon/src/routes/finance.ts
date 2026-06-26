@@ -84,6 +84,8 @@ function rowToReconciliation(row: any): DailyReconciliation {
     channel: row.channel,
     revenue: row.revenue,
     platformFees: row.platform_fees,
+    paymentProcessingFees: row.payment_processing_fees ?? 0,
+    refundsAndRemakes: row.refunds_and_remakes ?? 0,
     adSpend: row.ad_spend,
     refunds: row.refunds,
     netRevenue: row.net_revenue,

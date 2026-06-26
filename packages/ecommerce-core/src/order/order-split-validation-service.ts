@@ -1,4 +1,6 @@
-﻿export interface LineItem {
+﻿export const MAX_ITEMS_PER_SUB_ORDER = 50;
+
+export interface LineItem {
   id?: string;
   productId: string;
   quantity: number;
@@ -33,10 +35,10 @@ export class OrderSplitValidationService {
 
     const suggestions: SubOrderSuggestion[] = [];
 
-    for (const [key, groupItems] of groups.entries()) {
-      const separatorIndex = key.indexOf('|');
-      const vendorId = key.substring(0, separatorIndex);
-      const shippingMethod = key.substring(separatorIndex + 1);
+    for (const groupItems of groups.values()) {
+      if (groupItems.length === 0) continue;
+      const vendorId = groupItems[0].vendorId;
+      const shippingMethod = groupItems[0].shippingMethod;
 
       let currentSubOrderItems: LineItem[] = [];
       let currentQuantity = 0;
@@ -45,7 +47,7 @@ export class OrderSplitValidationService {
         let remainingQuantity = item.quantity;
 
         while (remainingQuantity > 0) {
-          const availableCapacity = 50 - currentQuantity;
+          const availableCapacity = MAX_ITEMS_PER_SUB_ORDER - currentQuantity;
           const quantityToAdd = Math.min(remainingQuantity, availableCapacity);
 
           if (quantityToAdd > 0) {
@@ -57,7 +59,7 @@ export class OrderSplitValidationService {
             remainingQuantity -= quantityToAdd;
           }
 
-          if (currentQuantity === 50) {
+          if (currentQuantity === MAX_ITEMS_PER_SUB_ORDER) {
             suggestions.push(Object.freeze({
               vendorId,
               shippingMethod,
