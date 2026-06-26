@@ -17,7 +17,7 @@ server.ts (102) → app.ts (98) → Express app
 | /api/agents | agents.ts | AgentAdapterPool + scanAgentPersonalities | 93 |
 | /api/skills | skills.ts | scanSkillsDir + SkillExecutor | 160 |
 | /api/products | products.ts | SQLite | 72 |
-| /api/orders | orders.ts | SQLite | 59 |
+| /api/orders | orders.ts | SQLite + OrderSplitValidationService | 59 |
 | /api/ecommerce | ecommerce.ts | PodProductDesigner + ResearchService + AnalyticsService + CampaignCreator + AdCreativeGenService | 153 |
 | /api/etsy/listings | etsy.ts | EtsyListingService | 187 |
 | /api/shopify | shopify.ts | ShopifyService + CroService + EmailFlows | 142 |
