@@ -135,6 +135,22 @@ export interface SlaDashboard {
   activeBreaches: SlaBreach[]; periodDays: number
 }
 
+export interface SupportTicket {
+  id: string; channel: string; customer_email?: string; customer_name?: string
+  ticket_type: string; content: string; status: string
+  sla_deadline?: string; assigned_to?: string; created_at: string
+}
+export interface TicketResponse {
+  id: string; ticket_id: string; response: string; created_by?: string; created_at: string
+}
+export interface Macro {
+  key: string; name: string; subject: string; body: string; channel: string
+}
+export interface RefundRequest {
+  id: string; order_id: string; channel: string; amount: number; reason: string
+  status: string; handler?: string; created_at: string
+}
+
 export interface FulfillmentOrder {
   id: string; order_id: string; sku: string; quantity: number; status: string
   is_personalized?: boolean; vendor_id?: string; assigned_to?: string
@@ -305,6 +321,32 @@ export const api = {
       check: (): Promise<{ alerts: FinanceAlert[] }> => apiPost('/finance/alerts/check', {}),
       acknowledge: (id: string): Promise<{ alert: FinanceAlert }> => apiPost(`/finance/alerts/${id}/acknowledge`, {}),
     },
+  },
+
+  // -----------------------------------------------------------------------
+  // Support
+  // -----------------------------------------------------------------------
+  support: {
+    tickets: {
+      list: (): Promise<{ tickets: SupportTicket[] }> => apiGet('/support/tickets'),
+      get: (id: string): Promise<{ ticket: SupportTicket }> => apiGet(`/support/tickets/${id}`),
+      create: (data: Partial<SupportTicket>): Promise<{ ticket: SupportTicket }> => apiPost('/support/tickets', data),
+      respond: (id: string, response: string): Promise<{ ticket: SupportTicket }> => apiPost(`/support/tickets/${id}/respond`, { response }),
+      escalate: (id: string): Promise<{ ticket: SupportTicket }> => apiPost(`/support/tickets/${id}/escalate`, {}),
+      resolve: (id: string): Promise<{ ticket: SupportTicket }> => apiPost(`/support/tickets/${id}/resolve`, {}),
+    },
+    macros: {
+      list: (): Promise<{ macros: Macro[] }> => apiGet('/support/macros'),
+      get: (key: string): Promise<{ macro: Macro }> => apiGet(`/support/macros/${encodeURIComponent(key)}`),
+    },
+    refunds: {
+      list: (): Promise<{ refunds: RefundRequest[] }> => apiGet('/support/refunds'),
+      get: (id: string): Promise<{ refund: RefundRequest }> => apiGet(`/support/refunds/${id}`),
+      create: (data: { orderId: string; channel: string; amount: number; reason: string }): Promise<{ refund: RefundRequest }> => apiPost('/support/refunds', data),
+      approve: (id: string): Promise<{ refund: RefundRequest }> => apiPost(`/support/refunds/${id}/approve`, {}),
+      process: (id: string): Promise<{ refund: RefundRequest }> => apiPost(`/support/refunds/${id}/process`, {}),
+    },
+    slaBreaches: (): Promise<{ breaches: unknown[] }> => apiGet('/support/sla-breaches'),
   },
 
   // -----------------------------------------------------------------------
