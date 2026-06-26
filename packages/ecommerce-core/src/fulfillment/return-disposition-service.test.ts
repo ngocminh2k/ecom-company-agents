@@ -94,27 +94,131 @@ describe('ReturnDispositionService', () => {
     expect(result.claimOpened).toBe(false)
   })
 
-  it('throws error if required fields are missing', () => {
-    expect(() =>
-      service.processReturn({
-        orderId: '',
-        sku: 'SKU-001',
-        condition: 'new',
-        reasonCode: 'test',
-        inspectedBy: 'inspector-1',
-      }),
-    ).toThrow('orderId is required')
-  })
+  describe('validation errors', () => {
+    it('throws ValidationError if orderId is missing', () => {
+      expect(() =>
+        service.processReturn({
+          orderId: '',
+          sku: 'SKU-001',
+          condition: 'new',
+          reasonCode: 'test',
+          inspectedBy: 'inspector-1',
+        }),
+      ).toThrow(ValidationError)
+      expect(() =>
+        service.processReturn({
+          orderId: '',
+          sku: 'SKU-001',
+          condition: 'new',
+          reasonCode: 'test',
+          inspectedBy: 'inspector-1',
+        }),
+      ).toThrow('orderId is required')
+    })
 
-  it('throws ValidationError for unknown condition', () => {
-    expect(() =>
-      service.processReturn({
-        orderId: 'ORD-127',
-        sku: 'SKU-005',
-        condition: 'unknown' as ReturnCondition,
-        reasonCode: 'test',
-        inspectedBy: 'inspector-1',
-      }),
-    ).toThrow(ValidationError)
+    it('throws ValidationError if sku is missing', () => {
+      expect(() =>
+        service.processReturn({
+          orderId: 'ORD-127',
+          sku: '',
+          condition: 'new',
+          reasonCode: 'test',
+          inspectedBy: 'inspector-1',
+        }),
+      ).toThrow(ValidationError)
+      expect(() =>
+        service.processReturn({
+          orderId: 'ORD-127',
+          sku: '',
+          condition: 'new',
+          reasonCode: 'test',
+          inspectedBy: 'inspector-1',
+        }),
+      ).toThrow('sku is required')
+    })
+
+    it('throws ValidationError if condition is missing', () => {
+      expect(() =>
+        service.processReturn({
+          orderId: 'ORD-127',
+          sku: 'SKU-001',
+          condition: '' as ReturnCondition,
+          reasonCode: 'test',
+          inspectedBy: 'inspector-1',
+        }),
+      ).toThrow(ValidationError)
+      expect(() =>
+        service.processReturn({
+          orderId: 'ORD-127',
+          sku: 'SKU-001',
+          condition: '' as ReturnCondition,
+          reasonCode: 'test',
+          inspectedBy: 'inspector-1',
+        }),
+      ).toThrow('condition is required')
+    })
+
+    it('throws ValidationError if reasonCode is missing', () => {
+      expect(() =>
+        service.processReturn({
+          orderId: 'ORD-127',
+          sku: 'SKU-001',
+          condition: 'new',
+          reasonCode: '',
+          inspectedBy: 'inspector-1',
+        }),
+      ).toThrow(ValidationError)
+      expect(() =>
+        service.processReturn({
+          orderId: 'ORD-127',
+          sku: 'SKU-001',
+          condition: 'new',
+          reasonCode: '',
+          inspectedBy: 'inspector-1',
+        }),
+      ).toThrow('reasonCode is required')
+    })
+
+    it('throws ValidationError if inspectedBy is missing', () => {
+      expect(() =>
+        service.processReturn({
+          orderId: 'ORD-127',
+          sku: 'SKU-001',
+          condition: 'new',
+          reasonCode: 'test',
+          inspectedBy: '',
+        }),
+      ).toThrow(ValidationError)
+      expect(() =>
+        service.processReturn({
+          orderId: 'ORD-127',
+          sku: 'SKU-001',
+          condition: 'new',
+          reasonCode: 'test',
+          inspectedBy: '',
+        }),
+      ).toThrow('inspectedBy is required')
+    })
+
+    it('throws ValidationError for unknown condition', () => {
+      expect(() =>
+        service.processReturn({
+          orderId: 'ORD-127',
+          sku: 'SKU-005',
+          condition: 'unknown' as ReturnCondition,
+          reasonCode: 'test',
+          inspectedBy: 'inspector-1',
+        }),
+      ).toThrow(ValidationError)
+      expect(() =>
+        service.processReturn({
+          orderId: 'ORD-127',
+          sku: 'SKU-005',
+          condition: 'unknown' as ReturnCondition,
+          reasonCode: 'test',
+          inspectedBy: 'inspector-1',
+        }),
+      ).toThrow('Invalid return condition')
+    })
   })
 })

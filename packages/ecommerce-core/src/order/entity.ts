@@ -67,13 +67,15 @@ export function validatePersonalizationContent(personalizationData: string): str
   const blockedProfanity = ['fuck', 'shit', 'bitch', 'asshole', 'cunt', 'nigger', 'faggot', 'kill', 'murder']
 
   for (const trademark of blockedTrademarks) {
-    if (normalizedData.includes(trademark)) {
+    const regex = new RegExp(`\\b${trademark}\\b`, 'i')
+    if (regex.test(normalizedData)) {
       errors.push(`Content contains blocked trademark: ${trademark}`)
     }
   }
 
   for (const profanity of blockedProfanity) {
-    if (normalizedData.includes(profanity)) {
+    const regex = new RegExp(`\\b${profanity}\\b`, 'i')
+    if (regex.test(normalizedData)) {
       errors.push(`Content contains blocked language: ${profanity}`)
     }
   }

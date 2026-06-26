@@ -36,11 +36,11 @@ export class ReturnDispositionService {
   constructor(private storage: ReturnDispositionStorage) {}
 
   processReturn(input: ReturnDispositionInput): ReturnDispositionLog {
-    if (!input.orderId) throw new Error('orderId is required')
-    if (!input.sku) throw new Error('sku is required')
-    if (!input.condition) throw new Error('condition is required')
-    if (!input.reasonCode) throw new Error('reasonCode is required')
-    if (!input.inspectedBy) throw new Error('inspectedBy is required')
+    if (!input.orderId) throw new ValidationError('orderId is required')
+    if (!input.sku) throw new ValidationError('sku is required')
+    if (!input.condition) throw new ValidationError('condition is required')
+    if (!input.reasonCode) throw new ValidationError('reasonCode is required')
+    if (!input.inspectedBy) throw new ValidationError('inspectedBy is required')
 
     let disposition: DispositionDecision
     let claimOpened = false
