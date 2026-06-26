@@ -50,6 +50,37 @@ export interface OrderStatusUpdateInput {
   carrier?: string
 }
 
+/**
+ * Validates personalized content against a hardcoded blocklist
+ * to prevent copyright liability and vendor bans.
+ */
+export function validatePersonalizationContent(personalizationData: string): string[] {
+  const errors: string[] = []
+  
+  if (!personalizationData) return errors
+
+  const normalizedData = personalizationData.toLowerCase()
+  
+  // High-risk trademarked terms blocklist
+  const blockedTrademarks = ['disney', 'nike', 'marvel', 'star wars', 'adidas', 'gucci', 'louis vuitton']
+  // Severe profanity and hate speech blocklist
+  const blockedProfanity = ['fuck', 'shit', 'bitch', 'asshole', 'cunt', 'nigger', 'faggot', 'kill', 'murder']
+
+  for (const trademark of blockedTrademarks) {
+    if (normalizedData.includes(trademark)) {
+      errors.push(`Content contains blocked trademark: ${trademark}`)
+    }
+  }
+
+  for (const profanity of blockedProfanity) {
+    if (normalizedData.includes(profanity)) {
+      errors.push(`Content contains blocked language: ${profanity}`)
+    }
+  }
+
+  return errors
+}
+
 export function validateOrderCreate(input: OrderCreateInput): string[] {
   const errors: string[] = []
 
@@ -72,6 +103,11 @@ export function validateOrderCreate(input: OrderCreateInput): string[] {
 
   if (input.customerEmail && !input.customerEmail.includes('@')) {
     errors.push('Invalid email format')
+  }
+
+  if (input.isPersonalized && input.personalizationData) {
+    const personalizationErrors = validatePersonalizationContent(input.personalizationData)
+    errors.push(...personalizationErrors)
   }
 
   return errors

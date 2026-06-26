@@ -1,3 +1,6 @@
+import { randomUUID } from 'node:crypto'
+import { ValidationError } from '../order/service.js'
+
 export type ReturnCondition = 'new' | 'damaged' | 'defective' | 'wrong_item'
 export type DispositionDecision = 'restock' | 'rtv' | 'refurbish' | 'scrap'
 
@@ -60,11 +63,11 @@ export class ReturnDispositionService {
         claimOpened = false
         break
       default:
-        throw new Error(`Unknown condition: ${input.condition}`)
+        throw new ValidationError('Invalid return condition', [`Unknown condition: ${input.condition}`])
     }
 
     const log: ReturnDispositionLog = {
-      id: crypto.randomUUID(),
+      id: randomUUID(),
       orderId: input.orderId,
       sku: input.sku,
       condition: input.condition,

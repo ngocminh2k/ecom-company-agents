@@ -1,7 +1,32 @@
 import { describe, it, expect, vi } from 'vitest';
 import { OrderService, ValidationError } from './service.js';
 import type { OrderCreateInput } from './entity.js';
+import { validatePersonalizationContent } from './entity.js';
 import { FulfillmentExceptionOrchestrator } from '../fulfillment/exception-orchestrator-service.js';
+
+describe('validatePersonalizationContent', () => {
+  it('should return empty array for valid personalization content', () => {
+    const errors = validatePersonalizationContent('Happy Birthday Mom');
+    expect(errors).toHaveLength(0);
+  });
+
+  it('should return error for copyright term', () => {
+    const errors = validatePersonalizationContent('I love Disney World');
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain('disney');
+  });
+
+  it('should return error for profanity', () => {
+    const errors = validatePersonalizationContent('What the fuck');
+    expect(errors).toHaveLength(1);
+    expect(errors[0]).toContain('fuck');
+  });
+
+  it('should return multiple errors for multiple violations', () => {
+    const errors = validatePersonalizationContent('fucking disney');
+    expect(errors).toHaveLength(2);
+  });
+})
 
 describe('OrderService', () => {
   describe('processNewOrder', () => {
@@ -39,6 +64,29 @@ describe('OrderService', () => {
       } catch (err: any) {
         expect(err.errors).toBeDefined();
         expect(err.errors.length).toBeGreaterThan(0);
+      }
+    });
+
+    it('should throw ValidationError if personalization contains trademarked or inappropriate terms', async () => {
+      const service = new OrderService();
+      const input: OrderCreateInput = {
+        productId: 'prod-123',
+        quantity: 1,
+        customerEmail: 'test@example.com',
+        customerName: 'Test User',
+        shippingAddress: '123 Main St',
+        isPersonalized: true,
+        personalizationData: 'I love disney'
+      };
+
+      await expect(service.processNewOrder(input, 10)).rejects.toThrow(ValidationError);
+
+      try {
+        await service.processNewOrder(input, 10);
+      } catch (err: any) {
+        expect(err.errors).toBeDefined();
+        expect(err.errors).toHaveLength(1);
+        expect(err.errors[0]).toContain('blocked trademark: disney');
       }
     });
 

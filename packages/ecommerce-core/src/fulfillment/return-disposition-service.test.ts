@@ -1,9 +1,11 @@
-import { describe, it, expect, beforeEach } from 'vitest'
+import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest'
 import {
   ReturnDispositionService,
   ReturnDispositionStorage,
   ReturnDispositionLog,
+  ReturnCondition,
 } from './return-disposition-service.js'
+import { ValidationError } from '../order/service.js'
 
 class MockReturnDispositionStorage implements ReturnDispositionStorage {
   private logs: Map<string, ReturnDispositionLog> = new Map()
@@ -24,10 +26,17 @@ class MockReturnDispositionStorage implements ReturnDispositionStorage {
 describe('ReturnDispositionService', () => {
   let storage: MockReturnDispositionStorage
   let service: ReturnDispositionService
+  const mockDate = new Date('2026-06-26T12:00:00Z')
 
   beforeEach(() => {
     storage = new MockReturnDispositionStorage()
     service = new ReturnDispositionService(storage)
+    vi.useFakeTimers()
+    vi.setSystemTime(mockDate)
+  })
+
+  afterEach(() => {
+    vi.useRealTimers()
   })
 
   it('processes a new item return correctly', () => {
@@ -42,6 +51,7 @@ describe('ReturnDispositionService', () => {
     expect(result.id).toBeDefined()
     expect(result.disposition).toBe('restock')
     expect(result.claimOpened).toBe(false)
+    expect(result.createdAt).toBe(mockDate.toISOString())
     expect(storage.findById(result.id)).toEqual(result)
   })
 
@@ -94,5 +104,17 @@ describe('ReturnDispositionService', () => {
         inspectedBy: 'inspector-1',
       }),
     ).toThrow('orderId is required')
+  })
+
+  it('throws ValidationError for unknown condition', () => {
+    expect(() =>
+      service.processReturn({
+        orderId: 'ORD-127',
+        sku: 'SKU-005',
+        condition: 'unknown' as ReturnCondition,
+        reasonCode: 'test',
+        inspectedBy: 'inspector-1',
+      }),
+    ).toThrow(ValidationError)
   })
 })
