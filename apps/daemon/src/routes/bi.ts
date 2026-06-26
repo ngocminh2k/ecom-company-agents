@@ -709,7 +709,7 @@ biRouter.post('/logs/ad-test', (req: any, res) => {
 
 biRouter.get('/logs/creative-brief', (_req, res) => {
   const briefs = biLogsService.getCreativeBriefs()
-  res.json({ briefs })
+  res.json({ logs: briefs })
 })
 
 biRouter.post('/logs/creative-brief', (req: any, res) => {
