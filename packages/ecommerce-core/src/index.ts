@@ -14,3 +14,4 @@ export * from './orchestration/index.js'
 export * from './bi/index.js'
 export type { TaskRunner } from './types.js'
 export * from './legal-compliance/dsar-service.js';
+export * from './hr/recruitment-service.js';
