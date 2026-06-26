@@ -202,6 +202,13 @@ export interface CostTransaction {
   date: string
 }
 
+export interface RefundTransaction {
+  id: string
+  sku: string
+  amount: number
+  date: string
+}
+
 export interface AdSpend {
   id: string
   channel: 'Meta Ads' | 'Google Ads' | string
@@ -272,7 +279,9 @@ export class FinanceReconciliationService {
     const result = Array.from(reportMap.values()).map(report => {
       // Calculate net margin
       // Net Margin = Gross Revenue - Platform Fees - COGS - Shipping Cost - Ad Spend
-      const netMargin = report.grossRevenue - report.platformFees - report.cogs - report.shippingCost - report.adSpend
+      // Net Margin = Gross Revenue - Platform Fees - COGS - Shipping Cost - Ad Spend - Refunds
+      // Net Margin = Gross Revenue - Platform Fees - COGS - Shipping Cost - Ad Spend - Refunds
+      const netMargin = report.grossRevenue - report.platformFees - report.cogs - report.shippingCost - report.adSpend - report.refunds - report.refunds
       
       const marginPercentage = report.grossRevenue > 0 
         ? (netMargin / report.grossRevenue) * 100 

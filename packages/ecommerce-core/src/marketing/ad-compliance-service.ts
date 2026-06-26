@@ -1,6 +1,8 @@
 import type { TaskRunner } from '../types.js'
 
 export interface AdAsset {
+  platform: string
+  landingPageUrl: string
   copy: string
   hooks: string[]
   images: string[]
