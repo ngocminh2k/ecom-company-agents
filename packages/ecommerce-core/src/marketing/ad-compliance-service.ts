@@ -26,43 +26,40 @@ export class AdComplianceValidationService {
       throw new Error('TaskRunner is required for compliance validation')
     }
 
+    const result = await this.runner.routeTask(
+      'marketing-compliance',
+      { asset },
+      {
+        outputSchema: {
+          type: 'object',
+          properties: {
+            status: { type: 'string', enum: ['approved', 'rejected'] },
+            violations: { type: 'array', items: { type: 'string' } },
+            fixedCopy: { type: 'string' }
+          },
+          required: ['status', 'violations']
+        }
+      }
+    )
+
+    if (result.error) {
+      throw new Error(`Compliance check failed: ${result.error}`)
+    }
+
     try {
-      const result = await this.runner.routeTask(
-        'marketing-compliance',
-        { asset },
-        {
-          outputSchema: {
-            type: 'object',
-            properties: {
-              status: { type: 'string', enum: ['approved', 'rejected'] },
-              violations: { type: 'array', items: { type: 'string' } },
-              fixedCopy: { type: ['string', 'null'] }
-            },
-            required: ['status', 'violations', 'fixedCopy']
-          }
-        }
-      )
+      const parsed = JSON.parse(result.output) as Partial<ComplianceResult>
 
-      if (result.error) {
-        throw new Error(`Compliance check failed: ${result.error}`)
+      const violationsArray = Array.isArray(parsed.violations) ? parsed.violations : []
+
+      // Immutability: return a new object with the parsed fields
+      return {
+        status: parsed.status as 'approved' | 'rejected',
+        violations: [...violationsArray],
+        fixedCopy: parsed.fixedCopy ?? null
       }
-
-      try {
-        const parsed = JSON.parse(result.output) as ComplianceResult
-
-        // Immutability: return a new object with the parsed fields
-        return {
-          status: parsed.status,
-          violations: [...parsed.violations],
-          fixedCopy: parsed.fixedCopy
-        }
-      } catch (parseError) {
-        const err = parseError instanceof Error ? parseError : new Error(String(parseError))
-        throw new Error(`Failed to parse compliance result: ${err.message}`)
-      }
-    } catch (error) {
-      // Re-throw the error explicitly without silently swallowing it
-      throw error
+    } catch (parseError) {
+      const err = parseError instanceof Error ? parseError : new Error(String(parseError))
+      throw new Error(`Failed to parse compliance result: ${err.message}`)
     }
   }
 }

@@ -17,6 +17,7 @@ describe('FinanceReconciliationService', () => {
         quantity: 2,
         grossRevenue: 50.00, // $25 each
         platformFee: 1.50, // 3%
+        paymentProcessingFee: 1.50, // 3%
         date: '2026-06-26'
       },
       {
@@ -26,6 +27,7 @@ describe('FinanceReconciliationService', () => {
         quantity: 1,
         grossRevenue: 30.00, // $30 each
         platformFee: 2.00, // Etsy fees
+        paymentProcessingFee: 1.00,
         date: '2026-06-26'
       }
     ]
@@ -62,29 +64,40 @@ describe('FinanceReconciliationService', () => {
       }
     ]
 
+    const refunds = [
+      {
+        id: 'rf1',
+        sku: 'TSHIRT-BLK-M',
+        amount: 5.00,
+        date: '2026-06-26'
+      }
+    ]
+
     const service = new FinanceReconciliationService()
 
     // Act
-    const reports = service.computeSKUMargin(revenues, costs, ads)
+    const reports = service.computeSKUMargin(revenues, costs, ads, refunds)
 
     // Assert
     expect(reports).toHaveLength(1)
-    
+
     const report = reports[0]
     expect(report.sku).toBe('TSHIRT-BLK-M')
     expect(report.unitsSold).toBe(3)
-    
+
     expect(report.grossRevenue).toBe(80.00)
     expect(report.platformFees).toBe(3.50)
+    expect(report.paymentProcessingFees).toBe(2.50)
     expect(report.cogs).toBe(30.00)
     expect(report.shippingCost).toBe(12.00)
     expect(report.adSpend).toBe(15.00)
-    
-    // Net Margin = 80 - 3.50 - 30 - 12 - 15 = 19.50
-    expect(report.netMargin).toBe(19.50)
-    
-    // Margin Percentage = (19.50 / 80) * 100 = 24.38%
-    expect(report.marginPercentage).toBe(24.38)
+    expect(report.refundsAndRemakes).toBe(5.00)
+
+    // Net Margin = 80 - 3.50 - 2.50 - 30 - 12 - 15 - 5 = 12.00
+    expect(report.netMargin).toBe(12.00)
+
+    // Margin Percentage = (12.00 / 80) * 100 = 15%
+    expect(report.marginPercentage).toBe(15.00)
   })
 
   it('handles scenarios with no units sold but ad spend occurred', () => {

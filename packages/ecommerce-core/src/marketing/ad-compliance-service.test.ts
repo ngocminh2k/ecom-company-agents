@@ -19,6 +19,8 @@ describe('AdComplianceValidationService', () => {
     const service = new AdComplianceValidationService(mockRunner)
 
     const asset = {
+      platform: 'Meta',
+      landingPageUrl: 'https://example.com',
       copy: 'Buy our cool product!',
       hooks: ['Wow!', 'Amazing!'],
       images: ['image1.jpg']
@@ -49,6 +51,8 @@ describe('AdComplianceValidationService', () => {
     const service = new AdComplianceValidationService(mockRunner)
 
     const asset = {
+      platform: 'TikTok',
+      landingPageUrl: 'https://example.com',
       copy: 'We guarantee you will love this product!',
       hooks: ['100% Guaranteed!'],
       images: ['image1.jpg']
@@ -76,6 +80,8 @@ describe('AdComplianceValidationService', () => {
     const service = new AdComplianceValidationService(mockRunner)
 
     await expect(service.validateAsset({
+      platform: 'Meta',
+      landingPageUrl: 'https://example.com',
       copy: 'Test',
       hooks: [],
       images: []
@@ -94,6 +100,8 @@ describe('AdComplianceValidationService', () => {
     const service = new AdComplianceValidationService(mockRunner)
 
     await expect(service.validateAsset({
+      platform: 'Meta',
+      landingPageUrl: 'https://example.com',
       copy: 'Test',
       hooks: [],
       images: []
@@ -104,6 +112,8 @@ describe('AdComplianceValidationService', () => {
     const service = new AdComplianceValidationService()
 
     await expect(service.validateAsset({
+      platform: 'Meta',
+      landingPageUrl: 'https://example.com',
       copy: 'Test',
       hooks: [],
       images: []

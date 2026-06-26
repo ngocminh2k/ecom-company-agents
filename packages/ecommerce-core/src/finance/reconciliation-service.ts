@@ -72,8 +72,11 @@ export class ReconciliationService {
    * netRevenue = revenue - platformFees - adSpend - refunds
    */
   recordDaily(input: DailyReconciliationInput): DailyReconciliation {
-    const netRevenue = Math.round(
-      (input.revenue - input.platformFees - input.adSpend - input.refunds) * 100
+    const netRevenue = (
+      Math.round(input.revenue * 100) -
+      Math.round(input.platformFees * 100) -
+      Math.round(input.adSpend * 100) -
+      Math.round(input.refunds * 100)
     ) / 100
 
     const existing = this.storage.findByDateAndChannel(input.date, input.channel)
@@ -119,23 +122,32 @@ export class ReconciliationService {
     let totalRefundsCount = 0
 
     for (const r of records) {
-      totalRevenue += r.revenue
-      totalFees += r.platformFees
-      totalAdSpend += r.adSpend
-      totalRefunds += r.refunds
+      totalRevenue += Math.round(r.revenue * 100)
+      totalFees += Math.round(r.platformFees * 100)
+      totalAdSpend += Math.round(r.adSpend * 100)
+      totalRefunds += Math.round(r.refunds * 100)
       totalOrders += r.ordersCount
       totalRefundsCount += r.refundCount
 
-      // Accumulate per-channel data
+      // Accumulate per-channel data in cents
       const prev = byChannel[r.channel]
       byChannel[r.channel] = {
-        revenue: (prev?.revenue ?? 0) + r.revenue,
-        fees: (prev?.fees ?? 0) + r.platformFees,
-        net: (prev?.net ?? 0) + r.netRevenue,
+        revenue: (prev?.revenue ?? 0) + Math.round(r.revenue * 100),
+        fees: (prev?.fees ?? 0) + Math.round(r.platformFees * 100),
+        net: (prev?.net ?? 0) + Math.round(r.netRevenue * 100),
       }
     }
 
-    const netRevenue = Math.round((totalRevenue - totalFees - totalAdSpend - totalRefunds) * 100) / 100
+    // Convert accumulated channel data back to dollars
+    for (const channel in byChannel) {
+      byChannel[channel] = {
+        revenue: byChannel[channel].revenue / 100,
+        fees: byChannel[channel].fees / 100,
+        net: byChannel[channel].net / 100,
+      }
+    }
+
+    const netRevenue = (totalRevenue - totalFees - totalAdSpend - totalRefunds) / 100
 
     const alerts: string[] = []
     const threshold = cpaTarget ?? DEFAULT_CPA_TARGET
@@ -173,10 +185,10 @@ export class ReconciliationService {
 
     return {
       date,
-      totalRevenue: Math.round(totalRevenue * 100) / 100,
-      totalFees: Math.round(totalFees * 100) / 100,
-      totalAdSpend: Math.round(totalAdSpend * 100) / 100,
-      totalRefunds: Math.round(totalRefunds * 100) / 100,
+      totalRevenue: totalRevenue / 100,
+      totalFees: totalFees / 100,
+      totalAdSpend: totalAdSpend / 100,
+      totalRefunds: totalRefunds / 100,
       netRevenue,
       byChannel,
       alerts,
@@ -202,13 +214,6 @@ export interface CostTransaction {
   cogs: number
   shippingCost: number
   vendor: 'Printify' | string
-  date: string
-}
-
-export interface RefundTransaction {
-  id: string
-  sku: string
-  amount: number
   date: string
 }
 
@@ -276,50 +281,50 @@ export class FinanceReconciliationService {
     for (const rev of revenues) {
       const report = getReport(rev.sku)
       report.unitsSold += rev.quantity
-      report.grossRevenue += rev.grossRevenue
-      report.platformFees += rev.platformFee
+      report.grossRevenue += Math.round(rev.grossRevenue * 100)
+      report.platformFees += Math.round(rev.platformFee * 100)
       if (rev.paymentProcessingFee) {
-        report.paymentProcessingFees += rev.paymentProcessingFee
+        report.paymentProcessingFees += Math.round(rev.paymentProcessingFee * 100)
       }
     }
 
     for (const cost of costs) {
       const report = getReport(cost.sku)
-      report.cogs += cost.cogs
-      report.shippingCost += cost.shippingCost
+      report.cogs += Math.round(cost.cogs * 100)
+      report.shippingCost += Math.round(cost.shippingCost * 100)
     }
 
     for (const ad of ads) {
       const report = getReport(ad.sku)
-      report.adSpend += ad.spend
+      report.adSpend += Math.round(ad.spend * 100)
     }
 
     for (const ref of refunds) {
       const report = getReport(ref.sku)
-      report.refundsAndRemakes += ref.amount
+      report.refundsAndRemakes += Math.round(ref.amount * 100)
     }
 
     const result = Array.from(reportMap.values()).map(report => {
-      // Calculate net margin
+      // Calculate net margin using integer cents
       // Net Margin = Gross Revenue - Platform Fees - Payment Processing Fees - COGS - Shipping Cost - Ad Spend - Refunds
-      const netMargin = report.grossRevenue - report.platformFees - report.paymentProcessingFees - report.cogs - report.shippingCost - report.adSpend - report.refundsAndRemakes
+      const netMarginCents = report.grossRevenue - report.platformFees - report.paymentProcessingFees - report.cogs - report.shippingCost - report.adSpend - report.refundsAndRemakes
 
       const marginPercentage = report.grossRevenue > 0
-        ? (netMargin / report.grossRevenue) * 100
+        ? (netMarginCents / report.grossRevenue) * 100
         : 0
 
-      // Return new immutable object with updated calculations and rounded to 2 decimal places
+      // Return new immutable object with updated calculations, converting cents back to dollars
       return {
         ...report,
-        netMargin: Math.round(netMargin * 100) / 100,
+        netMargin: netMarginCents / 100,
         marginPercentage: Math.round(marginPercentage * 100) / 100,
-        grossRevenue: Math.round(report.grossRevenue * 100) / 100,
-        platformFees: Math.round(report.platformFees * 100) / 100,
-        paymentProcessingFees: Math.round(report.paymentProcessingFees * 100) / 100,
-        cogs: Math.round(report.cogs * 100) / 100,
-        shippingCost: Math.round(report.shippingCost * 100) / 100,
-        adSpend: Math.round(report.adSpend * 100) / 100,
-        refundsAndRemakes: Math.round(report.refundsAndRemakes * 100) / 100,
+        grossRevenue: report.grossRevenue / 100,
+        platformFees: report.platformFees / 100,
+        paymentProcessingFees: report.paymentProcessingFees / 100,
+        cogs: report.cogs / 100,
+        shippingCost: report.shippingCost / 100,
+        adSpend: report.adSpend / 100,
+        refundsAndRemakes: report.refundsAndRemakes / 100,
       }
     })
 
