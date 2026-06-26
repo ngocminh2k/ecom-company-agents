@@ -135,6 +135,21 @@ export interface SlaDashboard {
   activeBreaches: SlaBreach[]; periodDays: number
 }
 
+export interface FulfillmentOrder {
+  id: string; order_id: string; sku: string; quantity: number; status: string
+  is_personalized?: boolean; vendor_id?: string; assigned_to?: string
+  tracking_number?: string; carrier?: string; notes?: string; created_at: string
+}
+export interface VendorScorecard {
+  id: string; vendor_id: string; period: string; overall_score: number
+  on_time_delivery?: number; defect_rate?: number; response_time_hours?: number
+}
+export interface QcLog {
+  id: string; order_id: string; checked_by?: string; result: string; notes?: string
+  sku_ok?: boolean; personalization_ok?: boolean; color_size_ok?: boolean
+  surface_ok?: boolean; packaging_ok?: boolean; photo_url?: string; created_at: string
+}
+
 // ---------------------------------------------------------------------------
 // Helpers — throw on failure, no mock
 // ---------------------------------------------------------------------------
@@ -289,6 +304,32 @@ export const api = {
       list: (): Promise<{ alerts: FinanceAlert[] }> => apiGet('/finance/alerts'),
       check: (): Promise<{ alerts: FinanceAlert[] }> => apiPost('/finance/alerts/check', {}),
       acknowledge: (id: string): Promise<{ alert: FinanceAlert }> => apiPost(`/finance/alerts/${id}/acknowledge`, {}),
+    },
+  },
+
+  // -----------------------------------------------------------------------
+  // Fulfillment
+  // -----------------------------------------------------------------------
+  fulfillment: {
+    orders: {
+      list: (): Promise<{ orders: FulfillmentOrder[] }> => apiGet('/fulfillment/orders'),
+      get: (orderId: string): Promise<{ orders: FulfillmentOrder[] }> => apiGet(`/fulfillment/orders/${encodeURIComponent(orderId)}`),
+      create: (data: { orderId: string; sku: string; quantity: number; vendorId?: string }): Promise<{ order: FulfillmentOrder }> => apiPost('/fulfillment/orders', data),
+      startProduction: (id: string): Promise<{ order: FulfillmentOrder }> => apiPost(`/fulfillment/orders/${id}/production`, {}),
+      completeProduction: (id: string, productionFileUrl: string): Promise<{ order: FulfillmentOrder }> => apiPost(`/fulfillment/orders/${id}/complete-production`, { productionFileUrl }),
+      qualityCheck: (id: string, qcResult: string, notes?: string): Promise<{ order: FulfillmentOrder }> => apiPost(`/fulfillment/orders/${id}/quality-check`, { qcResult, notes }),
+      ship: (id: string, trackingNumber: string, carrier: string): Promise<{ order: FulfillmentOrder }> => apiPost(`/fulfillment/orders/${id}/ship`, { trackingNumber, carrier }),
+      deliver: (id: string): Promise<{ order: FulfillmentOrder }> => apiPost(`/fulfillment/orders/${id}/deliver`, {}),
+      return: (id: string, reason?: string): Promise<{ order: FulfillmentOrder }> => apiPost(`/fulfillment/orders/${id}/return`, { reason }),
+    },
+    qcLogs: {
+      list: (orderId: string): Promise<{ qcLogs: QcLog[] }> => apiGet(`/fulfillment/orders/${encodeURIComponent(orderId)}/qc-logs`),
+      create: (data: { orderId: string; result: string; notes?: string; checkedBy?: string }): Promise<{ qcLog: QcLog }> => apiPost(`/fulfillment/orders/${data.orderId}/qc-log`, data),
+    },
+    vendorScorecards: {
+      list: (vendorId: string): Promise<{ scores: VendorScorecard[] }> => apiGet(`/fulfillment/vendor-scorecard/${encodeURIComponent(vendorId)}`),
+      create: (data: Record<string, unknown>): Promise<{ scorecard: VendorScorecard }> => apiPost('/fulfillment/vendor-scorecard', data),
+      comparison: (): Promise<{ comparison: VendorScorecard[] }> => apiGet('/fulfillment/vendor-comparison'),
     },
   },
 }
