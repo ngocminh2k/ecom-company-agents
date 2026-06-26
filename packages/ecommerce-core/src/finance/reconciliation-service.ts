@@ -11,7 +11,9 @@ export interface DailyReconciliation {
   channel: string
   revenue: number
   platformFees: number
+  paymentProcessingFees: number
   adSpend: number
+  refundsAndRemakes: number
   refunds: number
   netRevenue: number
   ordersCount: number
@@ -189,6 +191,7 @@ export interface RevenueTransaction {
   quantity: number
   grossRevenue: number
   platformFee: number
+  paymentProcessingFee?: number
   date: string
 }
 
@@ -199,6 +202,13 @@ export interface CostTransaction {
   cogs: number
   shippingCost: number
   vendor: 'Printify' | string
+  date: string
+}
+
+export interface RefundTransaction {
+  id: string
+  sku: string
+  amount: number
   date: string
 }
 
@@ -223,9 +233,11 @@ export interface SKUMarginReport {
   unitsSold: number
   grossRevenue: number
   platformFees: number
+  paymentProcessingFees: number
   cogs: number
   shippingCost: number
   adSpend: number
+  refundsAndRemakes: number
   netMargin: number
   marginPercentage: number
 }
@@ -237,7 +249,8 @@ export class FinanceReconciliationService {
   computeSKUMargin(
     revenues: RevenueTransaction[],
     costs: CostTransaction[],
-    ads: AdSpend[]
+    ads: AdSpend[],
+    refunds: RefundTransaction[] = []
   ): SKUMarginReport[] {
     const reportMap = new Map<string, SKUMarginReport>()
 
@@ -248,9 +261,11 @@ export class FinanceReconciliationService {
           unitsSold: 0,
           grossRevenue: 0,
           platformFees: 0,
+          paymentProcessingFees: 0,
           cogs: 0,
           shippingCost: 0,
           adSpend: 0,
+          refundsAndRemakes: 0,
           netMargin: 0,
           marginPercentage: 0,
         })
@@ -263,6 +278,9 @@ export class FinanceReconciliationService {
       report.unitsSold += rev.quantity
       report.grossRevenue += rev.grossRevenue
       report.platformFees += rev.platformFee
+      if (rev.paymentProcessingFee) {
+        report.paymentProcessingFees += rev.paymentProcessingFee
+      }
     }
 
     for (const cost of costs) {
@@ -276,15 +294,18 @@ export class FinanceReconciliationService {
       report.adSpend += ad.spend
     }
 
+    for (const ref of refunds) {
+      const report = getReport(ref.sku)
+      report.refundsAndRemakes += ref.amount
+    }
+
     const result = Array.from(reportMap.values()).map(report => {
       // Calculate net margin
-      // Net Margin = Gross Revenue - Platform Fees - COGS - Shipping Cost - Ad Spend
-      // Net Margin = Gross Revenue - Platform Fees - COGS - Shipping Cost - Ad Spend - Refunds
-      // Net Margin = Gross Revenue - Platform Fees - COGS - Shipping Cost - Ad Spend - Refunds
-      const netMargin = report.grossRevenue - report.platformFees - report.cogs - report.shippingCost - report.adSpend - report.refunds - report.refunds
-      
-      const marginPercentage = report.grossRevenue > 0 
-        ? (netMargin / report.grossRevenue) * 100 
+      // Net Margin = Gross Revenue - Platform Fees - Payment Processing Fees - COGS - Shipping Cost - Ad Spend - Refunds
+      const netMargin = report.grossRevenue - report.platformFees - report.paymentProcessingFees - report.cogs - report.shippingCost - report.adSpend - report.refundsAndRemakes
+
+      const marginPercentage = report.grossRevenue > 0
+        ? (netMargin / report.grossRevenue) * 100
         : 0
 
       // Return new immutable object with updated calculations and rounded to 2 decimal places
@@ -294,9 +315,11 @@ export class FinanceReconciliationService {
         marginPercentage: Math.round(marginPercentage * 100) / 100,
         grossRevenue: Math.round(report.grossRevenue * 100) / 100,
         platformFees: Math.round(report.platformFees * 100) / 100,
+        paymentProcessingFees: Math.round(report.paymentProcessingFees * 100) / 100,
         cogs: Math.round(report.cogs * 100) / 100,
         shippingCost: Math.round(report.shippingCost * 100) / 100,
         adSpend: Math.round(report.adSpend * 100) / 100,
+        refundsAndRemakes: Math.round(report.refundsAndRemakes * 100) / 100,
       }
     })
 
