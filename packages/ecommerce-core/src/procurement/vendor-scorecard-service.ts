@@ -1,6 +1,6 @@
 import { VendorPerformanceInput, VendorScorecard, VendorScorecardStorage, RiskLevel, VendorStatus } from './types.js';
 
-export class VendorScorecardService {
+export class ProcurementVendorScorecardService {
   constructor(private readonly storage: VendorScorecardStorage) {}
 
   evaluateVendor(input: VendorPerformanceInput): VendorScorecard {

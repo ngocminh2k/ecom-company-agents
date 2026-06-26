@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from 'vitest';
-import { VendorScorecardService } from './vendor-scorecard-service.js';
+import { ProcurementVendorScorecardService } from './vendor-scorecard-service.js';
 import { VendorScorecard, VendorScorecardStorage } from './types.js';
 
 class MockVendorScorecardStorage implements VendorScorecardStorage {
@@ -19,13 +19,13 @@ class MockVendorScorecardStorage implements VendorScorecardStorage {
   }
 }
 
-describe('VendorScorecardService', () => {
+describe('ProcurementVendorScorecardService', () => {
   let storage: MockVendorScorecardStorage;
-  let service: VendorScorecardService;
+  let service: ProcurementVendorScorecardService;
 
   beforeEach(() => {
     storage = new MockVendorScorecardStorage();
-    service = new VendorScorecardService(storage);
+    service = new ProcurementVendorScorecardService(storage);
   });
 
   it('should evaluate a top vendor to active with low risk', () => {

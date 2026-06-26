@@ -68,6 +68,7 @@ describe('PromotionGuardrailService', () => {
       expect(margin).toBeCloseTo(0.4245);
     });
 
+it('throws ValidationError when final selling price is zero or negative', () => {      const proposal: PromotionProposal = {        basePrice: 100,        discountType: 'fixed_amount',        discountValue: 100,        channel: 'Shopify',        category: 'Electronics'      };      expect(() => service.simulateMargin(proposal, defaultCostProfile)).toThrow(/Final selling price after discounts cannot be zero or negative/);    });
     it('calculates margin correctly for free shipping', () => {
       const proposal: PromotionProposal = {
         basePrice: 100,
@@ -179,6 +180,7 @@ describe('PromotionGuardrailService', () => {
 
       expect(() => service.evaluateProposal(negativePrice, defaultCostProfile)).toThrow(/Base price must be greater than zero/);
       expect(() => service.evaluateProposal(negativeDiscount, defaultCostProfile)).toThrow(/Discount value cannot be negative/);
+const invalidPercentage: PromotionProposal = {        basePrice: 100,        discountType: 'percentage',        discountValue: 1.10,        channel: 'Shopify',        category: 'Electronics'      };      const invalidFixedAmount: PromotionProposal = {        basePrice: 100,        discountType: 'fixed_amount',        discountValue: 110,        channel: 'Shopify',        category: 'Electronics'      };      expect(() => service.evaluateProposal(invalidPercentage, defaultCostProfile)).toThrow(/Percentage discount cannot exceed 100%/);      expect(() => service.evaluateProposal(invalidFixedAmount, defaultCostProfile)).toThrow(/Fixed discount cannot exceed base price/);
     });
   });
 });
