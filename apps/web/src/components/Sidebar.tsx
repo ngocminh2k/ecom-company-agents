@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingCart, Bot, MessageSquare,
   Truck, BarChart3, Settings, ChevronLeft,
-  FileSpreadsheet, Rocket, AlertTriangle,
+  FileSpreadsheet, Rocket, AlertTriangle, HeadphonesIcon,
 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -20,6 +20,7 @@ const nav = [
   { href: '/bi/logs', label: 'BI Logs', icon: BarChart3 },
   { href: '/bi/alerts', label: 'Alerts', icon: AlertTriangle },
   { href: '/fulfillment', label: 'Fulfillment', icon: Truck },
+  { href: '/support/tickets', label: 'Support', icon: HeadphonesIcon },
 ]
 
 export default function Sidebar() {
