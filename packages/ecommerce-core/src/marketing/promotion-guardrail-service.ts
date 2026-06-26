@@ -57,8 +57,7 @@ export class PromotionGuardrailService {
 
     // We can't sell for negative money or 0 usually, but let's calculate exact margin anyway.
     if (finalSellingPrice <= 0) {
-      // Selling for 0 or negative -> 100% loss minimum relative to cost, mathematically complex,
-      // but essentially net revenue is negative.
+      throw new ValidationError('Final selling price after discounts cannot be zero or negative.');
     }
 
     const paymentFees = finalSellingPrice * costProfile.paymentFeeRate;
@@ -89,6 +88,14 @@ export class PromotionGuardrailService {
     }
     if (proposal.discountValue < 0) {
       throw new ValidationError('Discount value cannot be negative.');
+    }
+
+    if (proposal.discountType === 'percentage' && proposal.discountValue > 1) {
+      throw new ValidationError('Percentage discount cannot exceed 100% (1.0).');
+    }
+
+    if (proposal.discountType === 'fixed_amount' && proposal.discountValue > proposal.basePrice) {
+      throw new ValidationError('Fixed discount cannot exceed base price.');
     }
 
     const rule = this.rules.find(r => r.channel === proposal.channel && r.category === proposal.category);
