@@ -179,6 +179,17 @@ function createIpCheckStorage() {
 // Research Sheet Routes
 // ============================================================
 
+// GET /api/product-research/sheets — list all sheets
+productResearchRouter.get('/sheets', (_req: any, res) => {
+  try {
+    const db = getDb()
+    const rows = db.prepare('SELECT * FROM product_research_sheets ORDER BY created_at DESC').all() as any[]
+    res.json({ sheets: rows })
+  } catch (err: any) {
+    res.status(500).json({ error: true, message: err.message })
+  }
+})
+
 // POST /api/product-research/sheets — create sheet
 productResearchRouter.post('/sheets', (req: any, res) => {
   try {
