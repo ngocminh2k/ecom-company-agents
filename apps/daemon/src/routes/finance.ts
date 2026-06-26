@@ -1,7 +1,7 @@
 /**
  * Finance Routes — REST endpoints for daily reconciliation, PnL by SKU, and alerts.
  *
- * Implements Phase 6: Finance for ECC OmniStudio.
+ * Implements Phase 6: Finance for AgentPulse Commerce.
  */
 import { Router, type Router as RouterType } from 'express'
 import { randomUUID } from 'node:crypto'
@@ -396,12 +396,9 @@ financeRouter.get('/pnl/product/:productId/classification', (req: any, res) => {
  */
 financeRouter.post('/alerts/check', (req: any, res) => {
   const { date } = req.body
+  const targetDate = date || new Date().toISOString().slice(0, 10)
 
-  if (!date) {
-    return res.status(400).json({ error: true, message: 'date is required' })
-  }
-
-  const records = reconciliationService.getDaily(date)
+  const records = reconciliationService.getDaily(targetDate)
   const alerts = alertService.checkAlerts(records)
   res.json({ alerts, count: alerts.length })
 })
