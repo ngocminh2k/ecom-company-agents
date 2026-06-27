@@ -178,6 +178,13 @@ export interface AmazonListing {
   id: string; product_id: string; title: string; asin?: string; sku?: string
   price?: number; status: string; fulfillment_type?: string; created_at: string
 }
+export interface Conversation {
+  id: string; title: string; skill_id: string; created_at: string; updated_at: string; message_count: number
+}
+export interface Message {
+  id: string; conversation_id: string; role: 'user' | 'assistant' | 'system'; content: string; agent_id?: string; created_at: string
+}
+
 
 // ---------------------------------------------------------------------------
 // Helpers — throw on failure, no mock
@@ -228,6 +235,7 @@ export const api = {
 
   skills: {
     list: (): Promise<{ skills: Skill[] }> => apiGet('/skills'),
+    route: (message: string): Promise<{ skillId: string }> => apiPost('/skills/route', { message }),
   },
 
   // -----------------------------------------------------------------------
@@ -414,4 +422,17 @@ export const api = {
       comparison: (): Promise<{ comparison: VendorScorecard[] }> => apiGet('/fulfillment/vendor-comparison'),
     },
   },
+
+  // -----------------------------------------------------------------------
+  // Conversations
+  // -----------------------------------------------------------------------
+  conversations: {
+    list: (): Promise<{ conversations: Conversation[] }> => apiGet('/conversations'),
+    create: (data: { title: string; skillId: string }): Promise<{ data: Conversation }> => apiPost('/conversations', data),
+    delete: (id: string): Promise<{ success: boolean }> => fetch(`${BASE}/conversations/${id}`, { method: 'DELETE' }).then(res => res.json()),
+    messages: {
+      list: (id: string): Promise<{ data: Message[] }> => apiGet(`/conversations/${id}/messages`),
+      create: (id: string, data: { userMessage?: string; assistantMessage?: string; agentId?: string }): Promise<{ success: boolean }> => apiPost(`/conversations/${id}/messages`, data),
+    }
+  }
 }
