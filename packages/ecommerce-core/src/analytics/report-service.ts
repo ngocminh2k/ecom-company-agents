@@ -21,7 +21,7 @@ export interface ProductPerformance {
 
 export interface DailySalesInput {
   orders: Array<{ total: number }>
-  products: Array<{ productId: string; name: string; total: number; units: number }>
+  products: Array<{ productId: string; name: string; revenue: number; units: number }>
   dateRange: { start: string; end: string }
 }
 

@@ -6,6 +6,8 @@ import { api, type FulfillmentOrder, type QcLog } from '@/lib/api'
 import { ArrowLeft, Truck, CheckCircle2, AlertCircle, Clock, Package, Send, Camera, RotateCcw } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
+import { Input } from '@/components/Input'
+import { Modal } from '@/components/Modal'
 import { Button } from '@/components/Button'
 import { Skeleton } from '@/components/Skeleton'
 import { ErrorState } from '@/components/ErrorState'
@@ -34,6 +36,15 @@ export default function FulfillmentOrderDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [showFileUrl, setShowFileUrl] = useState(false)
+  const [fileUrl, setFileUrl] = useState('')
+  const [showFailQc, setShowFailQc] = useState(false)
+  const [failQcReason, setFailQcReason] = useState('')
+  const [showShip, setShowShip] = useState(false)
+  const [tracking, setTracking] = useState('')
+  const [carrier, setCarrier] = useState('')
+  const [showReturn, setShowReturn] = useState(false)
+  const [returnReason, setReturnReason] = useState('Customer return')
 
   const load = useCallback(async () => {
     setLoading(true); setError(null)
@@ -117,37 +128,22 @@ export default function FulfillmentOrderDetailPage() {
             </Button>
           )}
           {order.status === 'in_production' && (
-            <>
-              <Button onClick={async () => {
-                const url = prompt('Production file URL:')
-                if (url) doAction('prod-done', () => api.fulfillment.orders.completeProduction(order!.id, url))
-              }} loading={actionLoading === 'prod-done'}>
-                <CheckCircle2 size={14} /> Complete Production
-              </Button>
-            </>
+            <Button onClick={() => setShowFileUrl(true)}>
+              <CheckCircle2 size={14} /> Complete Production
+            </Button>
           )}
           {order.status === 'quality_check' && (
             <>
-              <Button onClick={async () => {
-                if (confirm('Mark QC as PASS?'))
-                  doAction('qc-pass', () => api.fulfillment.orders.qualityCheck(order!.id, 'pass'))
-              }} loading={actionLoading === 'qc-pass'} variant="secondary">
+              <Button onClick={() => doAction('qc-pass', () => api.fulfillment.orders.qualityCheck(order!.id, 'pass'))} loading={actionLoading === 'qc-pass'} variant="secondary">
                 <CheckCircle2 size={14} /> Pass QC
               </Button>
-              <Button onClick={async () => {
-                if (confirm('Mark QC as FAIL?'))
-                  doAction('qc-fail', () => api.fulfillment.orders.qualityCheck(order!.id, 'fail', 'Failed QC'))
-              }} loading={actionLoading === 'qc-fail'} variant="danger">
+              <Button onClick={() => setShowFailQc(true)} loading={actionLoading === 'qc-fail'} variant="danger">
                 <AlertCircle size={14} /> Fail QC
               </Button>
             </>
           )}
           {order.status === 'packing' && (
-            <Button onClick={async () => {
-              const tracking = prompt('Tracking number:')
-              const carrier = prompt('Carrier (e.g. USPS):')
-              if (tracking && carrier) doAction('ship', () => api.fulfillment.orders.ship(order!.id, tracking, carrier))
-            }} loading={actionLoading === 'ship'}>
+            <Button onClick={() => setShowShip(true)}>
               <Send size={14} /> Mark Shipped
             </Button>
           )}
@@ -157,10 +153,7 @@ export default function FulfillmentOrderDetailPage() {
             </Button>
           )}
           {(order.status === 'shipped' || order.status === 'delivered') && (
-            <Button onClick={async () => {
-              const reason = prompt('Return reason:') || 'Customer return'
-              doAction('return', () => api.fulfillment.orders.return(order!.id, reason))
-            }} loading={actionLoading === 'return'} variant="danger">
+            <Button onClick={() => setShowReturn(true)} variant="danger">
               <RotateCcw size={14} /> Return
             </Button>
           )}
@@ -196,6 +189,70 @@ export default function FulfillmentOrderDetailPage() {
           </div>
         )}
       </Card>
+
+      {/* File URL Modal */}
+        <Modal open={showFileUrl} title="Production File URL" onClose={() => setShowFileUrl(false)}>
+          <div className="space-y-4">
+            <Input value={fileUrl} onChange={e => setFileUrl(e.target.value)} placeholder="https://example.com/file.pdf" />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setShowFileUrl(false)}>Cancel</Button>
+              <Button onClick={async () => {
+                if (!fileUrl) return
+                await doAction('prod-done', () => api.fulfillment.orders.completeProduction(order!.id, fileUrl))
+                setShowFileUrl(false)
+                setFileUrl('')
+              }} loading={actionLoading === 'prod-done'} disabled={!fileUrl}>Submit</Button>
+            </div>
+          </div>
+        </Modal>
+
+      {/* Fail QC Modal */}
+        <Modal open={showFailQc} title="Fail QC Reason" onClose={() => setShowFailQc(false)}>
+          <div className="space-y-4">
+            <Input value={failQcReason} onChange={e => setFailQcReason(e.target.value)} placeholder="Reason for QC failure…" />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setShowFailQc(false)}>Cancel</Button>
+              <Button onClick={async () => {
+                await doAction('qc-fail', () => api.fulfillment.orders.qualityCheck(order!.id, 'fail', failQcReason || 'Failed QC'))
+                setShowFailQc(false)
+                setFailQcReason('')
+              }} loading={actionLoading === 'qc-fail'} variant="danger">Fail QC</Button>
+            </div>
+          </div>
+        </Modal>
+
+      {/* Ship Modal */}
+        <Modal open={showShip} title="Shipping Details" onClose={() => setShowShip(false)}>
+          <div className="space-y-4">
+            <Input value={tracking} onChange={e => setTracking(e.target.value)} placeholder="Tracking number" />
+            <Input value={carrier} onChange={e => setCarrier(e.target.value)} placeholder="Carrier (e.g. USPS)" />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setShowShip(false)}>Cancel</Button>
+              <Button onClick={async () => {
+                if (!tracking || !carrier) return
+                await doAction('ship', () => api.fulfillment.orders.ship(order!.id, tracking, carrier))
+                setShowShip(false)
+                setTracking('')
+                setCarrier('')
+              }} loading={actionLoading === 'ship'} disabled={!tracking || !carrier}>Mark Shipped</Button>
+            </div>
+          </div>
+        </Modal>
+
+      {/* Return Modal */}
+        <Modal open={showReturn} title="Return Order" onClose={() => setShowReturn(false)}>
+          <div className="space-y-4">
+            <Input value={returnReason} onChange={e => setReturnReason(e.target.value)} placeholder="Return reason" />
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" onClick={() => setShowReturn(false)}>Cancel</Button>
+              <Button onClick={async () => {
+                await doAction('return', () => api.fulfillment.orders.return(order!.id, returnReason))
+                setShowReturn(false)
+                setReturnReason('Customer return')
+              }} loading={actionLoading === 'return'} variant="danger">Return</Button>
+            </div>
+          </div>
+        </Modal>
     </div>
   )
 }

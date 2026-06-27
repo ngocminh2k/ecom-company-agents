@@ -1,73 +1,125 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { api, type Product } from '@/lib/api'
+import { Package } from 'lucide-react'
+import { Button } from '@/components/Button'
+import { Skeleton } from '@/components/Skeleton'
+import { EmptyState } from '@/components/EmptyState'
+import { ErrorState } from '@/components/ErrorState'
 
 export default function ProductsPage() {
-  const [products, setProducts] = useState<any[]>([])
-  const [form, setForm] = useState({ name: '', type: 'pod', description: '', price: '' })
+  const [products, setProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [name, setName] = useState('')
+  const [type, setType] = useState('pod')
+  const [description, setDescription] = useState('')
+  const [price, setPrice] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [nameError, setNameError] = useState('')
 
-  useEffect(() => { loadProducts() }, [])
-
-  const loadProducts = async () => {
+  const load = useCallback(async () => {
+    setLoading(true)
+    setError(null)
     try {
-      const r = await fetch('http://localhost:7456/api/products')
-      const d = await r.json()
-      setProducts(d.products ?? [])
-    } catch {}
+      const res = await api.products.list()
+      setProducts(res.products)
+    } catch {
+      setError('Failed to load products')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => { load() }, [load])
+
+  const handleCreate = async () => {
+    setNameError('')
+    if (!name.trim()) {
+      setNameError('Product name is required')
+      return
+    }
+    setCreating(true)
+    try {
+      await api.products.create({ name, type, description: description || undefined, price: price ? parseFloat(price) : undefined })
+      setName('')
+      setType('pod')
+      setDescription('')
+      setPrice('')
+      await load()
+    } catch {
+      setError('Failed to create product')
+    } finally {
+      setCreating(false)
+    }
   }
 
-  const createProduct = async () => {
-    if (!form.name) return
-    await fetch('http://localhost:7456/api/products', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ ...form, price: form.price ? parseFloat(form.price) : null }),
-    })
-    setForm({ name: '', type: 'pod', description: '', price: '' })
-    loadProducts()
+  if (error) {
+    return (
+      <div className="p-6 lg:p-8 max-w-4xl mx-auto">
+        <ErrorState message={error} onRetry={load} />
+      </div>
+    )
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <a href="/" className="text-sm text-gray-400 hover:text-gray-600">← Home</a>
-      <h1 className="text-2xl font-bold mt-4 mb-8">Products</h1>
+    <div className="p-6 lg:p-8 max-w-4xl mx-auto">
+      <a href="/" className="text-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">&larr; Home</a>
+      <h1 className="text-2xl font-semibold tracking-tight mt-4 mb-8">Products</h1>
 
-      <div className="rounded-xl border border-gray-200 p-6 mb-8">
-        <h2 className="font-semibold mb-4">New Product</h2>
-        <div className="grid grid-cols-4 gap-3">
-          <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))}
-            placeholder="Product name" className="col-span-2 rounded-lg border border-gray-300 px-3 py-2 text-sm" />
-          <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))}
-            className="rounded-lg border border-gray-300 px-3 py-2 text-sm">
+      {/* New Product Form */}
+      <div className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-panel)] p-6 mb-8 shadow-card">
+        <h2 className="font-semibold mb-4 text-sm">New Product</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
+          <div className="sm:col-span-2">
+            <input value={name} onChange={e => { setName(e.target.value); setNameError('') }}
+              placeholder="Product name"
+              className={`w-full h-9 rounded-lg border ${nameError ? 'border-[var(--error)]' : 'border-[var(--border-medium)]'} bg-[var(--bg-panel)] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-ring)]`} />
+            {nameError && <p className="text-xs text-[var(--error)] mt-1">{nameError}</p>}
+          </div>
+          <select value={type} onChange={e => setType(e.target.value)}
+            className="h-9 rounded-lg border border-[var(--border-medium)] bg-[var(--bg-panel)] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-ring)]">
             <option value="pod">POD</option>
             <option value="dropshipping">Dropshipping</option>
           </select>
-          <button onClick={createProduct} className="bg-indigo-500 text-white rounded-lg text-sm font-medium hover:bg-indigo-600">
-            Create
-          </button>
+          <Button onClick={handleCreate} loading={creating}>Create</Button>
         </div>
-        <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))}
-          placeholder="Description (optional)" className="mt-2 w-full rounded-lg border border-gray-300 px-3 py-2 text-sm" />
+        <input value={description} onChange={e => setDescription(e.target.value)}
+          placeholder="Description (optional)"
+          className="mt-2 w-full h-9 rounded-lg border border-[var(--border-medium)] bg-[var(--bg-panel)] px-3 text-sm focus:outline-none focus:ring-2 focus:ring-[var(--accent-ring)]" />
       </div>
 
-      <div className="space-y-3">
-        {products.map((p: any) => (
-          <div key={p.id} className="rounded-lg border border-gray-200 p-4 flex items-center justify-between">
-            <div>
-              <div className="font-medium">{p.name}</div>
-              <div className="text-sm text-gray-500">{p.type} • ${p.price ?? '—'}</div>
+      {/* Product List */}
+      {loading ? (
+        <div className="space-y-3">
+          {[...Array(3)].map((_, i) => <Skeleton key={i} height={64} />)}
+        </div>
+      ) : products.length === 0 ? (
+        <EmptyState
+          icon={<Package size={24} />}
+          title="No products yet"
+          description="Create your first product using the form above."
+        />
+      ) : (
+        <div className="space-y-3">
+          {products.map(p => (
+            <div key={p.id} className="rounded-xl border border-[var(--border-light)] bg-[var(--bg-panel)] p-4 flex items-center justify-between shadow-card">
+              <div>
+                <div className="font-medium text-sm">{p.name}</div>
+                <div className="text-xs text-[var(--text-tertiary)]">{p.type} &middot; {p.price ? `$${p.price.toFixed(2)}` : '—'}</div>
+              </div>
+              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                p.status === 'active' ? 'bg-[var(--success-bg)] text-[var(--success)]' :
+                p.status === 'draft' ? 'bg-[var(--bg-hover)] text-[var(--text-tertiary)]' :
+                'bg-[var(--warning-bg)] text-[var(--warning)]'
+              }`}>
+                {p.status}
+              </span>
             </div>
-            <span className={`text-xs px-2 py-1 rounded-full ${
-              p.status === 'active' ? 'bg-green-100 text-green-700' :
-              p.status === 'draft' ? 'bg-gray-100 text-gray-600' :
-              'bg-yellow-100 text-yellow-700'
-            }`}>
-              {p.status}
-            </span>
-          </div>
-        ))}
-        {products.length === 0 && <p className="text-gray-400 text-center py-8">No products yet</p>}
-      </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

@@ -58,7 +58,7 @@ export default function WorkspacePage() {
 
     try {
       const res = await fetch(
-        `http://127.0.0.1:7456/api/chat?skill=${encodeURIComponent(skillId)}&message=${encodeURIComponent(userMsg)}`,
+        `/api/chat?skill=${encodeURIComponent(skillId)}&message=${encodeURIComponent(userMsg)}`,
         { signal: controller.signal }
       )
 

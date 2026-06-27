@@ -11,15 +11,19 @@ import { Button } from '@/components/Button'
 export default function HomePage() {
   const [daemonStatus, setDaemonStatus] = useState<string>('checking...')
   const [skills, setSkills] = useState<any[]>([])
+  const [agentCount, setAgentCount] = useState<number>(0)
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    fetch('http://127.0.0.1:7456/api/health')
+    fetch('/api/health')
       .then(r => r.json())
       .then(data => setDaemonStatus(`v${data.version} — online`))
       .catch(() => setDaemonStatus('offline'))
 
     api.skills.list().then(r => setSkills(r.skills)).catch(() => {})
+    api.agents.list().then(r => {
+      setAgentCount(r.personalities?.total ?? 0)
+    }).catch(() => {})
   }, [])
 
   const isOnline = daemonStatus !== 'offline'
@@ -63,7 +67,7 @@ export default function HomePage() {
           <span className="text-[var(--text-secondary)]">
             {isOnline ? `Daemon ${daemonStatus}` : 'Daemon offline'}
           </span>
-          <Link href="/agents" className="text-xs text-[var(--accent)] hover:underline ml-1">238 agents</Link>
+          <Link href="/agents" className="text-xs text-[var(--accent)] hover:underline ml-1">{agentCount > 0 ? `${agentCount} agents` : 'agents'}</Link>
         </div>
       </div>
 

@@ -26,7 +26,7 @@ export default function PnLPage() {
   const load = useCallback(async () => {
     setLoading(true); setError(null)
     try {
-      const res = await fetch('/api/finance/pnl/2026-06')
+      const res = await fetch(`/api/finance/pnl/${new Date().toISOString().slice(0, 7)}`)
       const data = await res.json()
       setReport(data.report)
     } catch { setError('Failed to load PnL') }

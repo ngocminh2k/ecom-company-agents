@@ -11,9 +11,40 @@
   --color-success: #22c55e;
   --color-warning: #f59e0b;
   --color-error: #ef4444;
+
+  /* ⬇️ Component-facing aliases (unprefixed, for text-[var(--xxx)] references) */
+  --bg: var(--color-bg);
+  --bg-page: var(--color-bg);
+  --bg-hover: #f3f4f6;
+  --bg-panel: #ffffff;
+  --bg-sidebar: #f9fafb;
+  --accent: var(--color-accent);
+  --accent-hover: var(--color-accent-hover);
+  --accent-soft: #eef2ff;
+  --accent-ring: var(--color-accent);
+  --info: #3b82f6;
+  --info-bg: #eff6ff;
+  --success: var(--color-success);
+  --success-bg: #f0fdf4;
+  --warning: var(--color-warning);
+  --warning-bg: #fefce8;
+  --error: var(--color-error);
+  --error-bg: #fef2f2;
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-tertiary: #9ca3af;
+  --text-inverse: #ffffff;
+  --border-light: #f3f4f6;
+  --border-medium: var(--color-border);
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --radius: 0.5rem;
+  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  background-color: var(--bg);
+  color: var(--text-primary);
 }

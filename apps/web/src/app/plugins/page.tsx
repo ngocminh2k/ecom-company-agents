@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react'
 import { api } from '@/lib/api'
-import { Puzzle, Plus, Play, ArrowRight, Zap, Shield, ShieldOff, Settings } from 'lucide-react'
+import { Puzzle, Plus, Play, Zap, Shield, Settings } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { Button } from '@/components/Button'
@@ -24,14 +24,17 @@ export default function PluginsPage() {
   const [error, setError] = useState<string | null>(null)
   const [installPath, setInstallPath] = useState('')
   const [installing, setInstalling] = useState(false)
+  const [installError, setInstallError] = useState<string | null>(null)
+  const [execError, setExecError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true); setError(null)
     try {
-      const res = await fetch('http://127.0.0.1:7456/api/plugins')
+      const res = await fetch('/api/plugins')
       const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to load plugins')
       setPlugins(data.plugins || [])
-    } catch { setError('Failed to load plugins') }
+    } catch (e: any) { setError(e.message) }
     finally { setLoading(false) }
   }, [])
 
@@ -39,32 +42,40 @@ export default function PluginsPage() {
 
   const handleInstall = async () => {
     if (!installPath.trim()) return
-    setInstalling(true)
+    setInstalling(true); setInstallError(null)
     try {
-      await fetch('http://127.0.0.1:7456/api/plugins/install', {
+      const res = await fetch('/api/plugins/install', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ path: installPath }),
       })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Install failed')
+      }
       setInstallPath('')
       await load()
-    } catch { alert('Install failed') }
+    } catch (e: any) { setInstallError(e.message) }
     finally { setInstalling(false) }
   }
 
   const handleExecute = async (id: string) => {
+    setExecError(null)
     try {
-      const res = await fetch(`http://127.0.0.1:7456/api/plugins/${id}/execute`, { method: 'POST' })
-      const data = await res.json()
-      alert(`Pipeline started: ${data.run?.id}`)
-    } catch { alert('Execution failed') }
+      const res = await fetch(`/api/plugins/${id}/execute`, { method: 'POST' })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Execution failed')
+      }
+    } catch (e: any) { setExecError(e.message) }
   }
 
   if (error) return <div className="p-6 lg:p-8 max-w-4xl mx-auto"><ErrorState message={error} onRetry={load} /></div>
 
   return (
     <div className="p-6 lg:p-8 max-w-4xl mx-auto">
-      <div className="flex items-center justify-between mb-6">
+      <a href="/" className="text-sm text-[var(--text-tertiary)] hover:text-[var(--text-primary)] transition-colors">&larr; Home</a>
+      <div className="flex items-center justify-between mt-4 mb-6">
         <div>
           <h1 className="text-2xl font-semibold tracking-tight">Plugins</h1>
           <p className="text-sm text-[var(--text-secondary)] mt-1">
@@ -84,6 +95,8 @@ export default function PluginsPage() {
             <Plus size={14} /> Install
           </Button>
         </div>
+        {installError && <p className="text-xs text-[var(--error)] mt-2">{installError}</p>}
+        {execError && <p className="text-xs text-[var(--error)] mt-2">{execError}</p>}
       </Card>
 
       {loading ? (
