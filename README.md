@@ -113,3 +113,7 @@ docs/              Architecture, adapters, skills, plugins spec
 ## License
 
 MIT
+
+### New Services
+
+- **StripeDisputeService**: Core backend service built to handle the submission of evidence for automated Stripe chargeback/dispute handling directly to the Stripe API, using standard Node `fetch()`. Fully supports Bring Your Own Key (BYOK) behavior to dynamically switch accounts per user.
