@@ -141,6 +141,10 @@ describe('AffiliateTrackingService', () => {
       expect(result).not.toBeNull();
       expect(result?.commissionAmount).toBe(50); // Fixed 50
     });
+
+    it('should throw an error if order value is negative', async () => {
+      await expect(service.registerConversion('click_1', 'order_1', -100)).rejects.toThrow('Order value cannot be negative');
+    });
   });
 
   describe('adjudicateConversion', () => {

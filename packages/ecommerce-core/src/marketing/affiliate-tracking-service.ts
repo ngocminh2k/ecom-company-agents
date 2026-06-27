@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 export type CommissionType = 'percentage' | 'fixed_amount';
 
 export interface Affiliate {
@@ -53,7 +54,7 @@ export class AffiliateTrackingService {
       return null;
     }
 
-    const clickId = `click_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+    const clickId = `click_${Date.now()}_${randomUUID()}`;
     
     await this.storage.logClick({
       clickId,
@@ -75,6 +76,10 @@ export class AffiliateTrackingService {
     orderId: string, 
     orderValue: number
   ): Promise<AffiliateConversion | null> {
+    if (orderValue < 0) {
+      throw new Error('Order value cannot be negative');
+    }
+
     const click = await this.storage.getClick(clickId);
     
     if (!click || click.converted) {
@@ -87,12 +92,14 @@ export class AffiliateTrackingService {
       return null;
     }
 
-    const commissionAmount = affiliate.commissionType === 'percentage' 
-      ? orderValue * (affiliate.commissionRate / 100)
-      : affiliate.commissionRate;
+    const orderValueCents = Math.round(orderValue * 100);
+    const commissionCents = affiliate.commissionType === 'percentage'
+      ? Math.round(orderValueCents * (affiliate.commissionRate / 100))
+      : Math.round(affiliate.commissionRate * 100);
+    const commissionAmount = commissionCents / 100;
 
     const conversion: AffiliateConversion = {
-      conversionId: `conv_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+      conversionId: `conv_${Date.now()}_${randomUUID()}`,
       affiliateId: affiliate.id,
       clickId: click.clickId,
       orderId,
