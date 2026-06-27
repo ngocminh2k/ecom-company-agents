@@ -149,4 +149,5 @@ export class PrintProvider {
 }
 
 export { PodOrderRouter } from './order-router.js'
+export * from './printify-service.js'
 export type { PodOrder, PodOrderStatus, PrintProviderName, RouteOrderInput, PodOrderStorage, PrintProviderCapability } from './order-router.js'
