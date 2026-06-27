@@ -42,9 +42,10 @@ export default function WorkspacePage() {
   const loadConversations = async () => {
     try {
       const res = await api.conversations.list()
-      setConversations(res.data)
+      setConversations(res.conversations || [])
     } catch (err) {
       console.error('Failed to load conversations', err)
+      alert('Failed to load conversations. Please check your connection or daemon.')
     }
   }
 
@@ -84,6 +85,7 @@ export default function WorkspacePage() {
       setConversations(prev => prev.filter(c => c.id !== id))
     } catch (err) {
       console.error('Failed to delete conversation', err)
+      alert('Failed to delete conversation. Please try again.')
     }
   }
 
@@ -197,27 +199,33 @@ export default function WorkspacePage() {
         return next
       })
 
-      // Save the message pair to the database
-      if (currentConvId) {
-        await api.conversations.messages.create(currentConvId, {
-          userMessage: userMsg,
-          assistantMessage: fullContent,
-          agentId: outputAgentId
-        })
-        if (isNewConv) {
-          loadConversations() // reload to get the new conversation in the list
-        }
-      }
-
     } catch (e: any) {
       if (e.name === 'AbortError') {
         setMessages(prev => [...prev, { role: 'system', content: '⏹ Cancelled by user.' }])
       } else {
+        console.error('Chat stream error', e)
         setMessages(prev => [...prev, {
           role: 'system',
           content: `Daemon offline or agent unavailable:\n${e.message}`,
           agentId: 'error',
         }])
+        alert(`Error during chat: ${e.message}`)
+      }
+    } finally {
+      // Save the message pair to the database even on abort/error
+      if (currentConvId) {
+        try {
+          await api.conversations.messages.create(currentConvId, {
+            userMessage: userMsg,
+            assistantMessage: fullContent, // saves whatever partial content we received
+            agentId: outputAgentId
+          })
+          if (isNewConv) {
+            loadConversations() // reload to get the new conversation in the list
+          }
+        } catch (saveErr) {
+          console.error('Failed to save messages to DB:', saveErr)
+        }
       }
     }
 
