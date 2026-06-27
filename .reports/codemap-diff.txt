@@ -1,12 +1,1 @@
-Codemap Update — 2026-06-26
-
-Changes since last codemap:
-- Frontend: 11→25 pages (+14): fulfillment, support, finance, listings, skills, agent detail
-- Backend: 30→37 routes (+7): /api/chat, /api/proxy, Amazon split (5 files)
-- Daemon: 19→24 route files (Amazon.ts → 6 files)
-- Skills: 0→13 (was dead, now loaded via MONOREPO_ROOT path fix)
-- Agents: 0→238 (same fix)
-- api.ts: 294→417 lines (+ new namespaces for support, fulfillment, listings)
-
-Next stale at: 2026-07-26 (30 days)
-
+Shippo API integration

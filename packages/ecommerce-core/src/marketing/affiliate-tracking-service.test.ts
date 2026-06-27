@@ -1,13 +1,13 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { 
-  AffiliateTrackingService, 
-  IAffiliateStorage, 
-  Affiliate, 
-  AffiliateClick 
+import { describe, it, expect, vi, type Mocked, beforeEach } from 'vitest';
+import {
+  AffiliateTrackingService,
+  IAffiliateStorage,
+  Affiliate,
+  AffiliateClick
 } from './affiliate-tracking-service.js';
 
 describe('AffiliateTrackingService', () => {
-  let storage: vi.Mocked<IAffiliateStorage>;
+  let storage: Mocked<IAffiliateStorage>;
   let service: AffiliateTrackingService;
 
   beforeEach(() => {

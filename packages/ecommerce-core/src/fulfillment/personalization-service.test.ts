@@ -1,8 +1,8 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, type Mocked, beforeEach } from 'vitest';
 import { PersonalizationService, IPersonalizationStorage } from './personalization-service.js';
 
 describe('PersonalizationService', () => {
-  let storage: vi.Mocked<IPersonalizationStorage>;
+  let storage: Mocked<IPersonalizationStorage>;
   let service: PersonalizationService;
 
   beforeEach(() => {

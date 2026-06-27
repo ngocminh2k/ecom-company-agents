@@ -337,6 +337,10 @@ export const api = {
   // Finance
   // -----------------------------------------------------------------------
   finance: {
+    disputes: {
+      list: (): Promise<{ data: any[] }> => apiGet("/finance/disputes"),
+      submitEvidence: (data: { disputeId: string, customerName: string, trackingNumber: string, carrier: string }): Promise<{ id: string, status: string }> => apiPost("/finance/disputes/evidence", data),
+    },
     alerts: {
       list: (): Promise<{ alerts: FinanceAlert[] }> => apiGet('/finance/alerts'),
       check: (): Promise<{ alerts: FinanceAlert[] }> => apiPost('/finance/alerts/check', {}),

@@ -2,9 +2,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { RetentionTriggerService, IRetentionStorage, RetentionEvent, AutomationRule } from '../../retention/RetentionTriggerService';
 
 class MockStorage implements IRetentionStorage {
-  public getActiveRulesMock = vi.fn<() => Promise<AutomationRule[]>>();
-  public getLastExecutionTimeMock = vi.fn<() => Promise<Date | null>>();
-  public logExecutionMock = vi.fn<() => Promise<void>>();
+  public getActiveRulesMock = vi.fn();
+  public getLastExecutionTimeMock = vi.fn();
+  public logExecutionMock = vi.fn();
 
   async getActiveRules(eventType: any) {
     return this.getActiveRulesMock(eventType);
@@ -54,7 +54,7 @@ describe('RetentionTriggerService', () => {
     expect(storage.getLastExecutionTimeMock).toHaveBeenCalledWith('cust_1', 'rule_1');
     expect(storage.logExecutionMock).toHaveBeenCalled();
     
-    const executionCall = storage.logExecutionMock.mock.calls[0];
+    const executionCall = storage.logExecutionMock.mock.calls[0] as any[];
     expect(executionCall[0]).toBe('cust_1');
     expect(executionCall[1]).toBe('rule_1');
     expect(executionCall[2]).toHaveProperty('couponCode');
@@ -87,7 +87,7 @@ describe('RetentionTriggerService', () => {
     };
 
     storage.getActiveRulesMock.mockResolvedValueOnce([rule]);
-    
+
     // Last executed 2 hours ago
     const twoHoursAgo = new Date(Date.now() - 2 * 60 * 60 * 1000);
     storage.getLastExecutionTimeMock.mockResolvedValueOnce(twoHoursAgo);

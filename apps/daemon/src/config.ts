@@ -37,6 +37,7 @@ const envSchema = z.object({
   PRINTIFY_API_KEY: z.string().optional(),
   SHOPIFY_API_KEY: z.string().optional(),
   SHOPIFY_STORE_URL: z.string().optional(),
+  SHIPPO_API_KEY: z.string().optional(),
 })
 
 export type DaemonConfig = z.infer<typeof envSchema>
