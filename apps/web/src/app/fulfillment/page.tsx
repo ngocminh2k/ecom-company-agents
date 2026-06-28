@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { api, type FulfillmentOrder } from '@/lib/api'
-import { Truck, Plus, Search, ArrowRight, CheckCircle2, AlertCircle, Clock, Package } from 'lucide-react'
+import { Truck, Plus, Search, ArrowRight, CheckCircle2, AlertCircle, Clock, Package, PlayCircle } from 'lucide-react'
 import { Card } from '@/components/Card'
 import { Badge } from '@/components/Badge'
 import { Button } from '@/components/Button'
