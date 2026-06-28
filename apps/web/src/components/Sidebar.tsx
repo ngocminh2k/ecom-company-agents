@@ -25,6 +25,7 @@ const nav = [
   { href: '/listings', label: 'Listings', icon: Store },
   { href: '/skills', label: 'Skills', icon: BookOpen },
   { href: '/plugins', label: 'Plugins', icon: Puzzle },
+  { href: '/settings', label: 'Settings', icon: Settings },
 ]
 
 export default function Sidebar() {

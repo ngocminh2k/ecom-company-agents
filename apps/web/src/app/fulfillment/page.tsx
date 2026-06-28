@@ -69,7 +69,11 @@ export default function FulfillmentPage() {
           </p>
         </div>
         <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={() => alert('Exception Orchestrator run initiated')}>
+          <Button variant="secondary" onClick={() => router.push('/fulfillment/ndr')}>
+            <AlertCircle size={14} />
+            NDR
+          </Button>
+          <Button variant="secondary" onClick={() => router.push('/fulfillment/orchestrator')}>
             <PlayCircle size={14} />
             Run Exception Orchestrator
           </Button>

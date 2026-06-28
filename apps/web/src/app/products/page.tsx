@@ -1,5 +1,6 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
 import { useEffect, useState, useCallback } from 'react'
 import { api, type Product } from '@/lib/api'
 import { Package } from 'lucide-react'
@@ -9,6 +10,7 @@ import { EmptyState } from '@/components/EmptyState'
 import { ErrorState } from '@/components/ErrorState'
 
 export default function ProductsPage() {
+  const router = useRouter()
   const [products, setProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -110,7 +112,7 @@ export default function ProductsPage() {
                 <div className="text-xs text-[var(--text-tertiary)]">{p.type} &middot; {p.price ? `$${p.price.toFixed(2)}` : '—'}</div>
               </div>
               <div className="flex items-center gap-4">
-                <Button variant="secondary" size="sm" onClick={() => alert(`Allocating inventory for ${p.name}...`)}>Allocate Inventory</Button>
+                <Button variant="secondary" size="sm" onClick={() => router.push(`/products/${p.id}/inventory`)}>Allocate Inventory</Button>
                 <span className={`text-xs px-2 py-1 rounded-full font-medium ${
                   p.status === 'active' ? 'bg-[var(--success-bg)] text-[var(--success)]' :
                   p.status === 'draft' ? 'bg-[var(--bg-hover)] text-[var(--text-tertiary)]' :

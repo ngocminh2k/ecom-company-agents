@@ -64,6 +64,7 @@ export default function SupportTicketsPage() {
           </p>
         </div>
         <div className="flex items-center gap-2">
+          <Button variant="secondary" onClick={() => router.push('/support/voc')}>VoC Dashboard</Button>
           <Button variant="secondary" onClick={() => router.push('/support/refunds')}>Refunds</Button>
           <Button onClick={() => router.push('/support/tickets/new')}><Plus size={14} /> New Ticket</Button>
         </div>
