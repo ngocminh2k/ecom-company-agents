@@ -22,6 +22,17 @@ Inspired by:
 - **BYOK Proxy** — bring your own API keys for LLM access
 - **Local-First** — 127.0.0.1 only, CORS off by default, SSRF guarded
 
+### Core Services (90% SOP Automation)
+- **Spy Tool**: Browser-search pattern for product and market research.
+- **Ad Compliance**: Automated policy checking for ad creatives.
+- **Fulfillment Exceptions**: Proactive handling of supplier issues and delays.
+- **Finance Reconciliation**: Automated profit and margin calculation.
+- **Inventory Allocation & Reorder**: Smart stock management for dropshipping.
+- **Order Split**: Intelligent multi-vendor routing.
+- **Vendor Scorecard**: Continuous supplier evaluation.
+- **Retention Triggers**: Automated customer lifecycle engagement.
+- **Chargeback Defense Assembler**: Including the *StripeDisputeService* for automated dispute evidence submission via the Stripe API with BYOK support.
+
 ## Quick Start
 
 ```bash
@@ -113,7 +124,3 @@ docs/              Architecture, adapters, skills, plugins spec
 ## License
 
 MIT
-
-### New Services
-
-- **StripeDisputeService**: Core backend service built to handle the submission of evidence for automated Stripe chargeback/dispute handling directly to the Stripe API, using standard Node `fetch()`. Fully supports Bring Your Own Key (BYOK) behavior to dynamically switch accounts per user.
