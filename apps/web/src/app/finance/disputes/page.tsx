@@ -139,7 +139,20 @@ export default function DisputesPage() {
       {/* Evidence Form */}
       {activeDispute && (
         <div className="bg-[var(--bg-panel)] border border-[var(--border-light)] rounded-xl p-6">
-          <h2 className="text-lg font-medium mb-4">Submit Evidence for {activeDispute}</h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-medium">Submit Evidence for {activeDispute}</h2>
+            <button
+              type="button"
+              onClick={() => {
+                setCustomerName('John Doe')
+                setTrackingNumber('TRK123456789')
+                setCarrier('USPS')
+              }}
+              className="text-sm bg-[var(--bg-base)] border border-[var(--border-medium)] px-3 py-1.5 rounded-lg hover:bg-[var(--bg-hover)]"
+            >
+              Auto-fill from Order
+            </button>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-4 max-w-md">
             <div>

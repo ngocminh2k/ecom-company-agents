@@ -109,13 +109,16 @@ export default function ProductsPage() {
                 <div className="font-medium text-sm">{p.name}</div>
                 <div className="text-xs text-[var(--text-tertiary)]">{p.type} &middot; {p.price ? `$${p.price.toFixed(2)}` : '—'}</div>
               </div>
-              <span className={`text-xs px-2 py-1 rounded-full font-medium ${
-                p.status === 'active' ? 'bg-[var(--success-bg)] text-[var(--success)]' :
-                p.status === 'draft' ? 'bg-[var(--bg-hover)] text-[var(--text-tertiary)]' :
-                'bg-[var(--warning-bg)] text-[var(--warning)]'
-              }`}>
-                {p.status}
-              </span>
+              <div className="flex items-center gap-4">
+                <Button variant="secondary" size="sm" onClick={() => alert(`Allocating inventory for ${p.name}...`)}>Allocate Inventory</Button>
+                <span className={`text-xs px-2 py-1 rounded-full font-medium ${
+                  p.status === 'active' ? 'bg-[var(--success-bg)] text-[var(--success)]' :
+                  p.status === 'draft' ? 'bg-[var(--bg-hover)] text-[var(--text-tertiary)]' :
+                  'bg-[var(--warning-bg)] text-[var(--warning)]'
+                }`}>
+                  {p.status}
+                </span>
+              </div>
             </div>
           ))}
         </div>
