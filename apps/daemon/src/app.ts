@@ -31,6 +31,7 @@ import { biRouter } from './routes/bi.js'
 import { chatRouter } from './routes/chat.js'
 import { conversationsRouter } from './routes/conversations.js'
 import { proxyRouter } from './routes/proxy.js'
+import { openSeoRouter } from './routes/openseo.js'
 
 export interface DaemonContext {
   pool: AgentAdapterPool
@@ -85,6 +86,7 @@ export function createApp(context: DaemonContext): Express {
   app.use('/api/chat', chatRouter)
   app.use('/api/conversations', conversationsRouter)
   app.use('/api/proxy', proxyRouter)
+  app.use('/api/openseo', openSeoRouter)
 
   // Error handler
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

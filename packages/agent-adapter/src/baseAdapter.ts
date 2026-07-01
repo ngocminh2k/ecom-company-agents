@@ -19,7 +19,7 @@ export class BaseAdapter implements AgentAdapter {
   readonly id: string
   readonly name: string
   private def: RuntimeAgentDef
-  private activeProcesses: Map<string, ChildProcess> = new Map()
+  protected activeProcesses: Map<string, ChildProcess> = new Map()
   private lastDetectedPath: string | null = null
 
   constructor(def: RuntimeAgentDef) {
