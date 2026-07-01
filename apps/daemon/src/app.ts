@@ -6,7 +6,6 @@ import express, { type Express } from 'express'
 import cors from 'cors'
 import { getConfig } from './config.js'
 import { AgentAdapterPool, AgentRouterService } from '@ngocminh2k/agent-adapter'
-import { MockAdapter, ClaudeCodeAdapter } from '@ngocminh2k/agent-adapter'
 import { RoutingMatrix, createDefaultRoutingRules } from '@ngocminh2k/agent-adapter'
 
 // Route imports
@@ -29,6 +28,9 @@ import { financeRouter } from './routes/finance.js'
 import { productResearchRouter } from './routes/product-research.js'
 import { orchestrationRouter } from './routes/orchestration.js'
 import { biRouter } from './routes/bi.js'
+import { chatRouter } from './routes/chat.js'
+import { conversationsRouter } from './routes/conversations.js'
+import { proxyRouter } from './routes/proxy.js'
 
 export interface DaemonContext {
   pool: AgentAdapterPool
@@ -80,6 +82,9 @@ export function createApp(context: DaemonContext): Express {
   app.use('/api/product-research', productResearchRouter)
   app.use('/api/orchestration', orchestrationRouter)
   app.use('/api/bi', biRouter)
+  app.use('/api/chat', chatRouter)
+  app.use('/api/conversations', conversationsRouter)
+  app.use('/api/proxy', proxyRouter)
 
   // Error handler
   app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {

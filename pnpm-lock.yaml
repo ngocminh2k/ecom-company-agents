@@ -109,6 +109,9 @@ importers:
 
   packages/agent-adapter:
     dependencies:
+      '@ngocminh2k/contracts':
+        specifier: workspace:*
+        version: link:../contracts
       zod:
         specifier: ^4.0.0
         version: 4.4.3
@@ -141,6 +144,9 @@ importers:
 
   packages/contracts:
     devDependencies:
+      '@types/node':
+        specifier: ^22.20.0
+        version: 22.20.0
       typescript:
         specifier: ^5.7.0
         version: 5.9.3

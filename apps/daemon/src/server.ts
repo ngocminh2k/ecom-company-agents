@@ -7,7 +7,15 @@ import { fileURLToPath } from 'node:url'
 import { getConfig, loadConfig, MONOREPO_ROOT } from './config.js'
 import { getDb, closeDb } from './db.js'
 import { createApp, type DaemonContext } from './app.js'
-import { AgentAdapterPool, MockAdapter, ClaudeCodeAdapter, RoutingMatrix, createDefaultRoutingRules, scanAgentPersonalities, AgentRouterService } from '@ngocminh2k/agent-adapter'
+import {
+  AgentAdapterPool,
+  MockAdapter,
+  ClaudeCodeAdapter,
+  RoutingMatrix,
+  createDefaultRoutingRules,
+  scanAgentPersonalities,
+  AgentRouterService
+} from '@ngocminh2k/agent-adapter'
 
 async function main() {
   const config = loadConfig()
@@ -42,8 +50,6 @@ async function main() {
   } else {
     console.log('[Agent] Claude Code not detected (optional)')
   }
-
-  // Initialize agent-to-agent routing matrix
   const routingMatrix = new RoutingMatrix(createDefaultRoutingRules())
   console.log(`[Router] ${routingMatrix.toJSON().length} routing rules loaded`)
 
@@ -59,9 +65,9 @@ async function main() {
     defaultTimeoutMs: 300_000,
     skillDirectories: [config.SKILLS_DIR],
     designSystemDirectories: [config.DESIGN_SYSTEMS_DIR],
-    allowMockFallback: !claudeDetected,
+    allowMockFallback: true,
   })
-  console.log(`[Router] Agent router service initialized (mock fallback: ${!claudeDetected})`)
+  console.log(`[Router] Agent router service initialized (mock fallback: true)`)
 
   // Create context
   const context: DaemonContext = {
