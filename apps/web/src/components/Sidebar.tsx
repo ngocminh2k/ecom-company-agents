@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
   LayoutDashboard, Package, ShoppingCart, Bot, MessageSquare,
-  Truck, BarChart3, Settings, ChevronLeft,
+  Truck, BarChart3, Settings, ChevronLeft, Search,
   FileSpreadsheet, Rocket, AlertTriangle, HeadphonesIcon, DollarSign, Store, BookOpen, Puzzle,
 } from 'lucide-react'
 import { useState } from 'react'
@@ -24,6 +24,7 @@ const nav = [
   { href: '/finance', label: 'Finance', icon: DollarSign },
   { href: '/listings', label: 'Listings', icon: Store },
   { href: '/skills', label: 'Skills', icon: BookOpen },
+  { href: '/openseo', label: 'OpenSEO', icon: Search },
   { href: '/plugins', label: 'Plugins', icon: Puzzle },
   { href: '/settings', label: 'Settings', icon: Settings },
 ]
