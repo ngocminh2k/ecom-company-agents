@@ -3,9 +3,14 @@ packages:
   - 'packages/*'
 
 allowBuilds:
+  '@mongodb-js/zstd': set this to true or false
   better-sqlite3: true
+  core-js: set this to true or false
+  core-js-pure: set this to true or false
   esbuild: true
+  node-liblzma: set this to true or false
   sharp: true
+  workerd: set this to true or false
 
 onlyBuiltDependencies:
   - better-sqlite3
