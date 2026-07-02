@@ -1,79 +1,101 @@
-'use client'
+import { Link } from "@tanstack/react-router";
+import { X } from "lucide-react";
+import { getProjectNavGroups } from "@/client/navigation/items";
+import { ProjectSwitcher } from "@/client/features/projects/ProjectSwitcher";
 
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import {
-  LayoutDashboard, Package, ShoppingCart, Bot, MessageSquare,
-  Truck, BarChart3, Settings, ChevronLeft, Search,
-  FileSpreadsheet, Rocket, AlertTriangle, HeadphonesIcon, DollarSign, Store, BookOpen, Puzzle,
-} from 'lucide-react'
-import { useState } from 'react'
+interface SidebarProps {
+  projectId: string;
+  onNavigate?: () => void;
+  onClose?: () => void;
+}
 
-const nav = [
-  { href: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/products', label: 'Products', icon: Package },
-  { href: '/orders', label: 'Orders', icon: ShoppingCart },
-  { href: '/agents', label: 'Agents', icon: Bot },
-  { href: '/workspace', label: 'Workspace', icon: MessageSquare },
-  { href: '/research', label: 'Research', icon: FileSpreadsheet },
-  { href: '/launch', label: 'Launch', icon: Rocket },
-  { href: '/bi/logs', label: 'BI Logs', icon: BarChart3 },
-  { href: '/bi/alerts', label: 'Alerts', icon: AlertTriangle },
-  { href: '/fulfillment', label: 'Fulfillment', icon: Truck },
-  { href: '/support/tickets', label: 'Support', icon: HeadphonesIcon },
-  { href: '/finance', label: 'Finance', icon: DollarSign },
-  { href: '/listings', label: 'Listings', icon: Store },
-  { href: '/skills', label: 'Skills', icon: BookOpen },
-  { href: '/openseo', label: 'OpenSEO', icon: Search },
-  { href: '/plugins', label: 'Plugins', icon: Puzzle },
-  { href: '/settings', label: 'Settings', icon: Settings },
-]
-
-export default function Sidebar() {
-  const path = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
+export function Sidebar({ projectId, onNavigate, onClose }: SidebarProps) {
+  const navGroups = getProjectNavGroups(projectId);
 
   return (
-    <aside className={`flex flex-col bg-[var(--bg-sidebar)] text-[var(--text-inverse)] transition-all duration-200 ${collapsed ? 'w-16' : 'w-56'}`}>
-      {/* Logo */}
-      <div className="flex items-center gap-2 h-14 px-4 border-b border-white/10 shrink-0">
-        <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center text-xs font-bold shrink-0">
-          E
-        </div>
-        {!collapsed && <span className="font-semibold text-sm tracking-tight">AgentPulse</span>}
+    <div className="sidebar w-64 border-r border-base-300 h-full bg-base-100 flex flex-col">
+      {/* Header */}
+      <div className="px-4 py-4 border-b border-base-300 flex items-center justify-between">
+        <span className="font-semibold text-base-content">OpenSEO</span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="btn btn-ghost btn-sm btn-circle"
+            aria-label="Close sidebar"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        )}
       </div>
 
-      {/* Nav */}
-      <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-        {nav.map(({ href, label, icon: Icon }) => {
-          const isActive = href === '/' ? path === '/' : path?.startsWith(href)
+      {/* Project picker */}
+      <div className="px-3 py-3 border-b border-base-300">
+        <ProjectSwitcher
+          activeProjectId={projectId}
+          variant="sidebar"
+          onCloseDrawer={onNavigate}
+        />
+      </div>
+
+      {/* Navigation */}
+      <nav className="flex-1 py-2 pl-3 overflow-y-auto">
+        {navGroups.map((entry) => {
+          if (entry.type === "standalone") {
+            const { icon: Icon, ...linkProps } = entry.item;
+            return (
+              <Link
+                key={linkProps.to}
+                {...linkProps}
+                onClick={onNavigate}
+                activeOptions={{ exact: false, includeSearch: false }}
+                className="relative flex items-center gap-3 px-4 py-2 text-sm text-base-content/60 transition-colors hover:bg-base-200 hover:text-base-content"
+                activeProps={{ className: "text-base-content font-medium" }}
+              >
+                {({ isActive }: { isActive: boolean }) => (
+                  <>
+                    {isActive ? (
+                      <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-primary" />
+                    ) : null}
+                    <Icon className="h-5 w-5" />
+                    {entry.item.label}
+                  </>
+                )}
+              </Link>
+            );
+          }
+
           return (
-            <Link
-              key={href}
-              href={href}
-              className={`flex items-center gap-3 px-3 h-9 rounded-lg text-sm transition-all ${
-                isActive
-                  ? 'bg-white/10 text-white font-medium'
-                  : 'text-white/60 hover:text-white/90 hover:bg-white/5'
-              }`}
-              title={collapsed ? label : undefined}
-            >
-              <Icon size={18} className="shrink-0" />
-              {!collapsed && <span>{label}</span>}
-            </Link>
-          )
+            <div key={entry.label} className="mb-2">
+              <div className="px-4 pb-1 pt-3 text-xs font-semibold uppercase tracking-wider text-base-content/40">
+                {entry.label}
+              </div>
+              {entry.items.map((item) => {
+                const { icon: Icon, ...linkProps } = item;
+                return (
+                  <Link
+                    key={linkProps.to}
+                    {...linkProps}
+                    onClick={onNavigate}
+                    activeOptions={{ exact: false, includeSearch: false }}
+                    className="relative flex items-center gap-3 px-4 py-2 text-sm text-base-content/60 transition-colors hover:bg-base-200 hover:text-base-content"
+                    activeProps={{ className: "text-base-content font-medium" }}
+                  >
+                    {({ isActive }: { isActive: boolean }) => (
+                      <>
+                        {isActive ? (
+                          <div className="absolute left-0 top-1 bottom-1 w-[3px] rounded-r-full bg-primary" />
+                        ) : null}
+                        <Icon className="h-5 w-5" />
+                        {item.label}
+                      </>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          );
         })}
       </nav>
-
-      {/* Bottom */}
-      <div className="p-2 border-t border-white/10">
-        <button
-          onClick={() => setCollapsed(c => !c)}
-          className="flex items-center justify-center w-full h-9 rounded-lg text-white/40 hover:text-white/70 hover:bg-white/5 transition-all"
-        >
-          <ChevronLeft size={16} className={`transition-transform ${collapsed ? 'rotate-180' : ''}`} />
-        </button>
-      </div>
-    </aside>
-  )
+    </div>
+  );
 }
