@@ -38,7 +38,7 @@ conversationsRouter.delete('/:id', (req, res) => {
 conversationsRouter.get('/:id/messages', (req, res) => {
   try {
     const id = req.params.id
-    const messages = getDb().prepare('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all()
+    const messages = getDb().prepare('SELECT * FROM messages WHERE conversation_id = ? ORDER BY created_at ASC').all(id)
     res.json({ data: messages })
   } catch (err: any) {
     res.status(500).json({ error: true, message: err.message })

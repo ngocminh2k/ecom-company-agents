@@ -7,7 +7,15 @@ import { fileURLToPath } from 'node:url'
 import { getConfig, loadConfig, MONOREPO_ROOT } from './config.js'
 import { getDb, closeDb } from './db.js'
 import { createApp, type DaemonContext } from './app.js'
-import { AgentAdapterPool, MockAdapter, ClaudeCodeAdapter, RoutingMatrix, createDefaultRoutingRules, scanAgentPersonalities, AgentRouterService } from '@ngocminh2k/agent-adapter'
+import {
+  AgentAdapterPool,
+  MockAdapter,
+  ClaudeCodeAdapter,
+  RoutingMatrix,
+  createDefaultRoutingRules,
+  scanAgentPersonalities,
+  AgentRouterService
+} from '@ngocminh2k/agent-adapter'
 
 async function main() {
   const config = loadConfig()
@@ -32,9 +40,25 @@ async function main() {
   })
 
   // Register adapters
-  pool.register(new MockAdapter())
+  pool.register(new MockAdapter({
+    id: 'mock',
+    name: 'Mock',
+    capabilities: { surgicalEdit: false, nativeSkillLoading: false, streaming: true, resume: false, permissionMode: 'bypass', contextWindowHint: 128000, mcpVersions: [], maxConcurrentRuns: 10, supportedTools: [] },
+    detect: { fallbackBins: [], versionFlag: '--version' },
+    buildArgs: () => [],
+    formatStdio: () => {},
+    parseOutput: () => null
+  }))
 
-  const claudeAdapter = new ClaudeCodeAdapter()
+  const claudeAdapter = new ClaudeCodeAdapter({
+    id: 'claude-code',
+    name: 'Claude Code',
+    capabilities: { surgicalEdit: true, nativeSkillLoading: true, streaming: true, resume: true, permissionMode: 'hybrid', contextWindowHint: 200000, mcpVersions: [], maxConcurrentRuns: 1, supportedTools: [] },
+    detect: { fallbackBins: [], versionFlag: '--version' },
+    buildArgs: () => [],
+    formatStdio: () => {},
+    parseOutput: () => null
+  })
   const claudeDetected = await claudeAdapter.detect()
   if (claudeDetected) {
     pool.register(claudeAdapter)
@@ -42,8 +66,6 @@ async function main() {
   } else {
     console.log('[Agent] Claude Code not detected (optional)')
   }
-
-  // Initialize agent-to-agent routing matrix
   const routingMatrix = new RoutingMatrix(createDefaultRoutingRules())
   console.log(`[Router] ${routingMatrix.toJSON().length} routing rules loaded`)
 
@@ -59,9 +81,9 @@ async function main() {
     defaultTimeoutMs: 300_000,
     skillDirectories: [config.SKILLS_DIR],
     designSystemDirectories: [config.DESIGN_SYSTEMS_DIR],
-    allowMockFallback: !claudeDetected,
+    allowMockFallback: true,
   })
-  console.log(`[Router] Agent router service initialized (mock fallback: ${!claudeDetected})`)
+  console.log(`[Router] Agent router service initialized (mock fallback: true)`)
 
   // Create context
   const context: DaemonContext = {

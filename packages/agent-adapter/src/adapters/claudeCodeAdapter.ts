@@ -6,7 +6,7 @@ import { createInterface } from 'node:readline'
 export class ClaudeCodeAdapter extends BaseAdapter {
   readonly id = 'claude-code'
   readonly name = 'Claude Code'
-  private activeProcesses: Map<string, ChildProcess> = new Map()
+
 
   async detect(): Promise<AgentDetection | null> {
     try {

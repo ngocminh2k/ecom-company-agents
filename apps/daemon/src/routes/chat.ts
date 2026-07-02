@@ -8,6 +8,7 @@
  */
 import { Router, type Router as RouterType } from 'express'
 import type { DaemonContext } from '../app.js'
+import { randomUUID } from 'node:crypto'
 
 export const chatRouter: RouterType = Router()
 
@@ -51,6 +52,7 @@ chatRouter.get('/', async (req: any, res) => {
   const taskType = skill.triggers?.[0] || skill.scenario || 'general'
 
   try {
+    const runId = randomUUID()
     for await (const event of ctx.agentRouter.routeTaskStream(taskType, taskInput, { inputs: taskInput, stream: true })) {
       res.write(`data: ${JSON.stringify(event)}\n\n`)
       if (event.type === 'done') break

@@ -31,6 +31,8 @@ export default function WorkspacePage() {
   const bottomRef = useRef<HTMLDivElement>(null)
   const abortRef = useRef<AbortController | null>(null)
 
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
+
   // Load skills and conversations on mount
   useEffect(() => {
     api.skills.list().then(r => setSkills(r.skills)).catch(() => {})
@@ -45,7 +47,7 @@ export default function WorkspacePage() {
       setConversations(res.conversations || [])
     } catch (err) {
       console.error('Failed to load conversations', err)
-      alert('Failed to load conversations. Please check your connection or daemon.')
+      setErrorMsg('Failed to load conversations. Please check your connection or daemon.')
     }
   }
 
@@ -85,7 +87,7 @@ export default function WorkspacePage() {
       setConversations(prev => prev.filter(c => c.id !== id))
     } catch (err) {
       console.error('Failed to delete conversation', err)
-      alert('Failed to delete conversation. Please try again.')
+      setErrorMsg('Failed to delete conversation. Please try again.')
     }
   }
 
@@ -206,10 +208,10 @@ export default function WorkspacePage() {
         console.error('Chat stream error', e)
         setMessages(prev => [...prev, {
           role: 'system',
-          content: `Daemon offline or agent unavailable:\n${e.message}`,
+          content: 'Daemon offline or agent unavailable. Please try again.',
           agentId: 'error',
         }])
-        alert(`Error during chat: ${e.message}`)
+        setErrorMsg('Error during chat. Please check your connection.')
       }
     } finally {
       // Save the message pair to the database even on abort/error
@@ -250,6 +252,12 @@ export default function WorkspacePage() {
             New Chat
           </button>
         </div>
+        {errorMsg && (
+          <div className="mx-2 mt-2 p-2 bg-[var(--error-bg)] border border-[var(--error)] text-[var(--error)] text-xs rounded-lg flex justify-between items-start">
+            <span>{errorMsg}</span>
+            <button onClick={() => setErrorMsg(null)} className="opacity-70 hover:opacity-100">×</button>
+          </div>
+        )}
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {conversations.length === 0 ? (
             <div className="text-xs text-center text-[var(--text-tertiary)] mt-4 p-4">

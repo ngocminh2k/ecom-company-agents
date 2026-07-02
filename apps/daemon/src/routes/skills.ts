@@ -24,6 +24,39 @@ skillsRouter.get('/', (_req, res) => {
   })
 })
 
+// Auto-detect best skill for a user message
+skillsRouter.post('/route', async (req: any, res) => {
+  const { message } = req.body
+  if (!message) {
+    return res.status(400).json({ error: true, message: 'Message is required' })
+  }
+
+  const config = getConfig()
+  const skills = scanSkillsDir(config.SKILLS_DIR)
+
+  // Simple heuristic routing based on triggers
+  const lowerMsg = message.toLowerCase()
+  let bestSkill = 'general'
+  let bestScore = 0
+
+  for (const skill of skills) {
+    let score = 0
+    if (skill.triggers) {
+      for (const trigger of skill.triggers) {
+        if (lowerMsg.includes(trigger.toLowerCase())) {
+          score++
+        }
+      }
+    }
+    if (score > bestScore) {
+      bestScore = score
+      bestSkill = skill.id
+    }
+  }
+
+  res.json({ skillId: bestSkill })
+})
+
 // Get skill by id
 skillsRouter.get('/:id', (req, res) => {
   const config = getConfig()
