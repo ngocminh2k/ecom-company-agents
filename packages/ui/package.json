@@ -1,0 +1,24 @@
+{
+  "name": "@ngocminh2k/ui",
+  "version": "1.0.0",
+  "description": "Shared UI components and tokens",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "echo 'Skipping tsc because files use aliased imports'",
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@tanstack/react-table": "^8.20.1",
+    "lucide-react": "0.400.0",
+    "react-hook-form": "^7.52.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "clsx": "^2.1.1",
+    "tailwind-merge": "^2.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0"
+  }
+}
